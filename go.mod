@@ -1,3 +1,3 @@
-module github.com/reyalka/monkey-go
+module revop
 
 go 1.24.3
