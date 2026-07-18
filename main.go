@@ -1,14 +1,19 @@
 package main
 
-import "revop/lexer"
+import (
+	"fmt"
+	"os"
+	"os/user"
+	"revop/repl"
+)
 
-// for lexer test
 func main() {
-	input := `let i = 5;`;
-	l := lexer.New(input)
-	// show all tokens
-	for tok := l.NextToken(); tok.Type != "EOF"; tok = l.NextToken() {
-		println(tok.Type, tok.Literal)
+	user, err := user.Current()
+	if err != nil {
+		panic(err)
 	}
-}
 
+	fmt.Printf("Hello %s! This is the Revop programming language!\n", user.Username)
+	fmt.Printf("Feel free to type in commands\n")
+	repl.Start(os.Stdin, os.Stdout)
+}
