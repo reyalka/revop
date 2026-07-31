@@ -16,7 +16,7 @@ const (
 	SUM        // + -
 	PRODUCT    // * /
 	PREFIX     // -X
-	CALL       // call(X\)
+	CALL       // call(X)
 )
 
 var precedences = map[token.TokenType]int{
