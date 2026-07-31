@@ -62,6 +62,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.LBRACE, p.parseBlockExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 
@@ -292,6 +293,33 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	}
 
 	return block
+}
+
+func (p *Parser) parseBlockExpression() ast.Expression {
+	stmts := []ast.Statement{}
+
+	p.nextToken()
+
+	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			stmts = append(stmts, stmt)
+			p.nextToken()
+		}
+	}
+
+	// return last statement as expression
+	if len(stmts) > 0 {
+		lastStmt := stmts[len(stmts)-1]
+		switch v := lastStmt.(type) {
+		case *ast.ExpressionStatement:
+			return v.Expression
+		case *ast.ReturnStatement:
+			return v.ReturnValue
+		}
+	}
+
+	return nil
 }
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {

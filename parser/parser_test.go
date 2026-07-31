@@ -422,6 +422,45 @@ func TestBooleanExpression(t *testing.T) {
 	}
 }
 
+func TestBlockExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"{ 3 }", "3"},
+		{"{ 3; return 4; }", "4"},
+		{"{ 3; 4; }", "4"},
+		{"{ 3; 4; 5; }", "5"},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain 1 statements. got=%d",
+				len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+				program.Statements[0])
+		}
+
+		if stmt.Expression == nil {
+			t.Fatalf("stmt.Expression is nil for input %q", tt.input)
+		}
+
+		if stmt.Expression.String() != tt.expected {
+			t.Errorf("expected=%q, got=%q", tt.expected, stmt.Expression.String())
+		}
+	}
+
+}
+
 func TestIfExpression(t *testing.T) {
 	input := `if (x < y) { x }`
 
