@@ -220,6 +220,28 @@ func (bs *BlockStatement) String() string {
 	return out.String()
 }
 
+type BlockExpression struct {
+	Token      token.Token
+	Statements []Statement
+}
+
+// implement `Expression` and `Node` interface
+func (be *BlockExpression) expressionNode()      {}
+func (be *BlockExpression) TokenLiteral() string { return be.Token.Literal }
+func (be *BlockExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("{ ")
+	for _, s := range be.Statements {
+		out.WriteString(s.String())
+		if _, ok := s.(*ExpressionStatement); ok {
+			out.WriteString(";")
+		}
+	}
+	out.WriteString(" }")
+	return out.String()
+}
+
 type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
