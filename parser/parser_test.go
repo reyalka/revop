@@ -427,10 +427,10 @@ func TestBlockExpression(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"{ 3 }", "3"},
-		{"{ 3; return 4; }", "4"},
-		{"{ 3; 4; }", "4"},
-		{"{ 3; 4; 5; }", "5"},
+		{"{ 3 }", "{ 3; }"},
+		{"{ 3; return 4; }", "{ 3;return 4; }"},
+		{"{ 3; 4; }", "{ 3;4; }"},
+		{"{ 3; 4; 5; }", "{ 3;4;5; }"},
 	}
 
 	for _, tt := range tests {

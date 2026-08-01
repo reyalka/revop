@@ -296,30 +296,21 @@ func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 }
 
 func (p *Parser) parseBlockExpression() ast.Expression {
-	stmts := []ast.Statement{}
+	expr := &ast.BlockExpression{
+		Token: p.curToken,
+	}
+	expr.Statements = []ast.Statement{}
 
 	p.nextToken()
 
 	for !p.curTokenIs(token.RBRACE) && !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
 		if stmt != nil {
-			stmts = append(stmts, stmt)
+			expr.Statements = append(expr.Statements, stmt)
 			p.nextToken()
 		}
 	}
-
-	// return last statement as expression
-	if len(stmts) > 0 {
-		lastStmt := stmts[len(stmts)-1]
-		switch v := lastStmt.(type) {
-		case *ast.ExpressionStatement:
-			return v.Expression
-		case *ast.ReturnStatement:
-			return v.ReturnValue
-		}
-	}
-
-	return nil
+	return expr
 }
 
 func (p *Parser) parseFunctionLiteral() ast.Expression {
