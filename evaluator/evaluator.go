@@ -207,13 +207,19 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 }
 
 func evalStringInfixExpression(op string, left, right object.Object) object.Object {
-	if op != "+" {
-		return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
-	}
-
 	leftVal := left.(*object.String).Value
 	rightVal := right.(*object.String).Value
-	return &object.String{Value: leftVal + rightVal}
+
+	switch op {
+	case "+":
+		return &object.String{Value: leftVal + rightVal}
+	case "==":
+		return toBooleanObject(leftVal == rightVal)
+	case "!=":
+		return toBooleanObject(leftVal != rightVal)
+	default:
+		return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
+	}
 }
 
 func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Object {

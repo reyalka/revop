@@ -321,6 +321,30 @@ func TestStringConcatenation(t *testing.T) {
 	}
 }
 
+func TestStringOprations(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected any
+	}{
+		{`"Hello" == "Hello"`, true},
+		{`"Hello" != "Hello"`, false},
+		{`"Hello" == "World"`, false},
+		{`"Hello" != "World"`, true},
+		{`"Hello" + " " + "World!" == "Hello World!"`, true},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		boolean, ok := tt.expected.(bool)
+		if ok {
+			testBooleanObject(t, evaluated, boolean)
+		} else {
+			t.Errorf("expected value is not boolean. got=%T (%+v)", tt.expected, tt.expected)
+		}
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
