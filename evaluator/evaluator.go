@@ -26,10 +26,8 @@ func Eval(node ast.Node) object.Object {
 		return evalPrefixExpression(node.Operator, Eval(node.Right))
 	case *ast.InfixExpression:
 		return evalInfixExpression(node.Operator, Eval(node.Left), Eval(node.Right))
-	case *ast.BlockStatement:
+	case *ast.Block:
 		return evalBlockStatement(node)
-	case *ast.BlockExpression:
-		return evalBlockExpression(node)
 	case *ast.IfExpression:
 		return evalIfExpression(node)
 	case *ast.ReturnStatement:
@@ -175,27 +173,13 @@ func evalIfExpression(ie *ast.IfExpression) object.Object {
 	}
 }
 
-func evalBlockStatement(block *ast.BlockStatement) object.Object {
+func evalBlockStatement(block *ast.Block) object.Object {
 	var result object.Object
 
 	for _, stmt := range block.Statements {
 		result = Eval(stmt)
 
 		if result != nil && (result.Type() == object.RETURN_VALUE_OBJ || result.Type() == object.ERROR_OBJ) {
-			return result
-		}
-	}
-
-	return result
-}
-
-func evalBlockExpression(block *ast.BlockExpression) object.Object {
-	var result object.Object
-
-	for _, stmt := range block.Statements {
-		result = Eval(stmt)
-
-		if result != nil && result.Type() == object.RETURN_VALUE_OBJ {
 			return result
 		}
 	}

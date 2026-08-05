@@ -175,8 +175,8 @@ func (b *Boolean) String() string       { return b.Token.Literal }
 type IfExpression struct {
 	Token       token.Token
 	Condition   Expression
-	Consequence *BlockStatement
-	Alternative *BlockStatement
+	Consequence *Block
+	Alternative *Block
 }
 
 // implement `Expression` and `Node` interface
@@ -198,41 +198,21 @@ func (ie *IfExpression) String() string {
 	return out.String()
 }
 
-type BlockStatement struct {
+// Expression としても Nodeとしても扱える
+type Block struct {
 	Token      token.Token
 	Statements []Statement
 }
 
-// implement `Statement` and `Node` interface
-func (bs *BlockStatement) statementNode()       {}
-func (bs *BlockStatement) TokenLiteral() string { return bs.Token.Literal }
-func (bs *BlockStatement) String() string {
+// implement `Statement` and `Expression` and `Node` interface
+func (b *Block) statementNode()       {}
+func (b *Block) expressionNode()      {}
+func (b *Block) TokenLiteral() string { return b.Token.Literal }
+func (b *Block) String() string {
 	var out bytes.Buffer
 
 	out.WriteString("{ ")
-	for _, s := range bs.Statements {
-		out.WriteString(s.String())
-		if _, ok := s.(*ExpressionStatement); ok {
-			out.WriteString(";")
-		}
-	}
-	out.WriteString(" }")
-	return out.String()
-}
-
-type BlockExpression struct {
-	Token      token.Token
-	Statements []Statement
-}
-
-// implement `Expression` and `Node` interface
-func (be *BlockExpression) expressionNode()      {}
-func (be *BlockExpression) TokenLiteral() string { return be.Token.Literal }
-func (be *BlockExpression) String() string {
-	var out bytes.Buffer
-
-	out.WriteString("{ ")
-	for _, s := range be.Statements {
+	for _, s := range b.Statements {
 		out.WriteString(s.String())
 		if _, ok := s.(*ExpressionStatement); ok {
 			out.WriteString(";")
@@ -245,7 +225,7 @@ func (be *BlockExpression) String() string {
 type FunctionLiteral struct {
 	Token      token.Token
 	Parameters []*Identifier
-	Body       *BlockStatement
+	Body       *Block
 }
 
 func (fl *FunctionLiteral) expressionNode()      {}
