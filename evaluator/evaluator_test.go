@@ -321,7 +321,7 @@ func TestStringConcatenation(t *testing.T) {
 	}
 }
 
-func TestStringOprations(t *testing.T) {
+func TestStringOperations(t *testing.T) {
 	tests := []struct {
 		input    string
 		expected any
