@@ -10,8 +10,10 @@ type Token struct {
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
-	IDENT   = "IDENT"
-	INT     = "INT"
+
+	IDENT  = "IDENT"
+	INT    = "INT"
+	STRING = "string"
 
 	ASSIGN = "="
 
