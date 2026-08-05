@@ -19,7 +19,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
 	case *ast.Identifier:
-		return evalIdentifer(node, env)
+		return evalIdentifier(node, env)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
@@ -107,12 +107,14 @@ func evalStatements(stmts []ast.Statement, env *object.Environment) object.Objec
 	return result
 }
 
-func evalIdentifer(node *ast.Identifier, env *object.Environment) object.Object {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return newError("identifier not found: %s", node.Value)
+func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
+	if val, ok := env.Get(node.Value); ok {
+		return val
 	}
-	return val
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+	return newError("identifier not found: %s", node.Value)
 }
 
 func evalPrefixExpression(op string, right object.Object) object.Object {
@@ -270,14 +272,16 @@ func evalExpressions(exprs []ast.Expression, env *object.Environment) []object.O
 }
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
-	parsedFn, ok := fn.(*object.Function)
-	if !ok {
+	switch fn := fn.(type) {
+	case *object.Function:
+		extendedEnv := extendedFunctionEnv(fn, args)
+		evaluated := Eval(fn.Body, extendedEnv)
+		return unwrapReturnValue(evaluated)
+	case *object.Builtin:
+		return fn.Fn(args...)
+	default:
 		return newError("not a function: %s", fn.Type())
 	}
-
-	extendedEnv := extendedFunctionEnv(parsedFn, args)
-	evaluated := Eval(parsedFn.Body, extendedEnv)
-	return unwrapReturnValue(evaluated)
 
 }
 
