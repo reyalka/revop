@@ -99,20 +99,6 @@ func evalProgram(program *ast.Program, env *object.Environment) object.Object {
 	return result
 }
 
-func evalStatements(stmts []ast.Statement, env *object.Environment) object.Object {
-	var result object.Object
-
-	for _, stmt := range stmts {
-		result = Eval(stmt, env)
-
-		if returnValue, ok := result.(*object.ReturnValue); ok {
-			return returnValue.Value
-		}
-	}
-
-	return result
-}
-
 func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
 	if val, ok := env.Get(node.Value); ok {
 		return val

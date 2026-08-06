@@ -1,0 +1,30 @@
+# .golangci.yml
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck      # エラーの握りつぶしを検出
+    - govet          # go vet相当
+    - ineffassign    # 使われない代入
+    - staticcheck    # バグ・非推奨API・簡略化提案(旧gosimpleも統合済み)
+    - unused         # 未使用の変数・関数・型
+    - revive         # golintの後継。命名・コメント規約など
+    - gocritic       # スタイル・パフォーマンスの追加診断
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+  exclusions:
+    presets:
+      - comments
+      - std-error-handling
+      - common-false-positives
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+run:
+  timeout: 5m
