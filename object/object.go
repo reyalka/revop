@@ -7,17 +7,19 @@ import (
 	"strings"
 )
 
-type ObjectType string
+type ObjectType int
 
 const (
-	INTEGER_OBJ      = "INTEGER"
-	BOOLEAN_OBJ      = "BOOLEAN"
-	NULL_OBJ         = "NULL"
-	RETURN_VALUE_OBJ = "RETURN_VALUE"
-	ERROR_OBJ        = "ERROR"
-	FUNCTION_OBJ     = "FUNCTION"
-	STRING_OBJ       = "STRING"
-	BUILTIN_OBJ      = "BUILTIN"
+	_ ObjectType = iota
+	INTEGER_OBJ
+	BOOLEAN_OBJ
+	NULL_OBJ
+	RETURN_VALUE_OBJ
+	ERROR_OBJ
+	FUNCTION_OBJ
+	STRING_OBJ
+	BUILTIN_OBJ
+	ARRAY_OBJ
 )
 
 type Object interface {
