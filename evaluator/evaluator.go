@@ -1,7 +1,6 @@
 package evaluator
 
 import (
-	"fmt"
 	"revop/ast"
 	"revop/object"
 )
@@ -78,6 +77,17 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements}
+	case *ast.IndexExpression:
+		left := Eval(node.Left, env)
+		if isError(left) {
+			return left
+		}
+
+		index := Eval(node.Index, env)
+		if isError(index) {
+			return index
+		}
+		return evalIndexExpression(left, index)
 	}
 
 	return nil
@@ -106,7 +116,7 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 	if builtin, ok := builtins[node.Value]; ok {
 		return builtin
 	}
-	return newError("identifier not found: %s", node.Value)
+	return object.NewError("identifier not found: %s", node.Value)
 }
 
 func evalPrefixExpression(op string, right object.Object) object.Object {
@@ -122,7 +132,7 @@ func evalPrefixExpression(op string, right object.Object) object.Object {
 
 func evalBangOperatorExpression(right object.Object) object.Object {
 	if right.Type() != object.BOOLEAN {
-		return newError("unknown operator: !%s", right.Type())
+		return object.NewError("unknown operator: !%s", right.Type())
 	}
 
 	switch right {
@@ -138,7 +148,7 @@ func evalBangOperatorExpression(right object.Object) object.Object {
 
 func evalMinusPrefixOperatorExpression(right object.Object) object.Object {
 	if right.Type() != object.INTEGER {
-		return newError("unknown operator: -%s", right.Type())
+		return object.NewError("unknown operator: -%s", right.Type())
 	}
 
 	value := right.(*object.Integer).Value
@@ -154,9 +164,9 @@ func evalInfixExpression(op string, left, right object.Object) object.Object {
 	case left.Type() == object.STRING && right.Type() == object.STRING:
 		return evalStringInfixExpression(op, left, right)
 	case left.Type() != right.Type():
-		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
+		return object.NewError("type mismatch: %s %s %s", left.Type(), op, right.Type())
 	default:
-		return newError("unknown operator: %s %s %s", left.Type(), op, left.Type())
+		return object.NewError("unknown operator: %s %s %s", left.Type(), op, left.Type())
 	}
 }
 
@@ -170,7 +180,7 @@ func evalBooleanInfixExpression(op string, left, right object.Object) object.Obj
 	case "!=":
 		return toBooleanObject(leftVal != rightVal)
 	default:
-		return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
+		return object.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 	}
 }
 
@@ -196,7 +206,7 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 	case "!=":
 		return toBooleanObject(leftVal != rightVal)
 	default:
-		return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
+		return object.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 	}
 }
 
@@ -212,7 +222,7 @@ func evalStringInfixExpression(op string, left, right object.Object) object.Obje
 	case "!=":
 		return toBooleanObject(leftVal != rightVal)
 	default:
-		return newError("unknown operator: %s %s %s", left.Type(), op, right.Type())
+		return object.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
 	}
 }
 
@@ -263,6 +273,22 @@ func evalExpressions(exprs []ast.Expression, env *object.Environment) []object.O
 	return result
 }
 
+func evalIndexExpression(left, index object.Object) object.Object {
+	switch {
+	case left.Type() == object.ARRAY && index.Type() == object.INTEGER:
+		array := left.(*object.Array)
+		idx := index.(*object.Integer).Value
+
+		if idx < 0 || idx >= int64(len(array.Elements)) {
+			return object.NewError("index out of range")
+		}
+
+		return array.Elements[idx]
+	default:
+		return object.NewError("index operator not supported: %s[%s]", left.Type(), index.Type())
+	}
+}
+
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
@@ -270,9 +296,9 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 		evaluated := Eval(fn.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.Builtin:
-		return fn.Fn(args...)
+		return fn.Run(args...)
 	default:
-		return newError("not a function: %s", fn.Type())
+		return object.NewError("not a function: %s", fn.Type())
 	}
 
 }
@@ -300,10 +326,6 @@ func toBooleanObject(input bool) *object.Boolean {
 		return TRUE
 	}
 	return FALSE
-}
-
-func newError(format string, a ...any) *object.Error {
-	return &object.Error{Message: fmt.Sprintf(format, a...)}
 }
 
 func isError(obj object.Object) bool {

@@ -59,6 +59,9 @@ type Error struct {
 
 func (e *Error) Type() ObjectType { return ERROR }
 func (e *Error) Inspect() string  { return "ERROR: " + e.Message }
+func NewError(format string, a ...any) *Error {
+	return &Error{Message: fmt.Sprintf(format, a...)}
+}
 
 type Function struct {
 	Parameters []*ast.Identifier
@@ -94,11 +97,18 @@ func (s *String) Inspect() string  { return s.Value }
 type BuiltinFunction func(args ...Object) Object
 
 type Builtin struct {
-	Fn BuiltinFunction
+	Args int64
+	Fn   BuiltinFunction
 }
 
 func (b *Builtin) Type() ObjectType { return BUILTIN }
 func (b *Builtin) Inspect() string  { return "builtin function" }
+func (b *Builtin) Run(args ...Object) Object {
+	if int64(len(args)) != b.Args {
+		return NewError("wrong number of arguments. got=%d, want=%d", len(args), b.Args)
+	}
+	return b.Fn(args...)
+}
 
 type Array struct {
 	Elements []Object
