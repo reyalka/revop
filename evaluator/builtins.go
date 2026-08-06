@@ -1,6 +1,10 @@
 package evaluator
 
-import "revop/object"
+import (
+	"fmt"
+	"revop/object"
+	"strings"
+)
 
 var builtins map[string]*object.Builtin
 
@@ -198,6 +202,19 @@ func init() {
 				}
 
 				return &object.Array{Elements: newElements}
+			},
+		},
+		"echo": {
+			Args: -1,
+			Fn: func(args ...object.Object) object.Object {
+				inspected := make([]string, len(args))
+				for i, arg := range args {
+					inspected[i] = arg.Inspect()
+				}
+				result := strings.Join(inspected, ", ")
+				fmt.Println(result)
+
+				return NULL
 			},
 		},
 	}

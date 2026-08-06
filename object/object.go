@@ -103,14 +103,14 @@ func (s *String) Inspect() string { return s.Value }
 type BuiltinFunction func(args ...Object) Object
 
 type Builtin struct {
-	Args int64
+	Args int64 // -1は可変長引数
 	Fn   BuiltinFunction
 }
 
 func (b *Builtin) Type() Type      { return BUILTIN }
 func (b *Builtin) Inspect() string { return "builtin function" }
 func (b *Builtin) Run(args ...Object) Object {
-	if int64(len(args)) != b.Args {
+	if b.Args != -1 && int64(len(args)) != b.Args {
 		return NewError("wrong number of arguments. got=%d, want=%d", len(args), b.Args)
 	}
 	return b.Fn(args...)
