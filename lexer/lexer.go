@@ -73,8 +73,13 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Literal = ""
 		tok.Type = token.EOF
 	case '"':
-		tok.Literal = l.readString()
-		tok.Type = token.STRING
+		literal, terminated := l.readString()
+		tok.Literal = literal
+		if terminated {
+			tok.Type = token.STRING
+		} else {
+			tok.Type = token.ILLEGAL
+		}
 	case '[':
 		tok = token.New(token.LBRACKET, l.ch)
 	case ']':
@@ -115,7 +120,9 @@ func (l *Lexer) readNumber() string {
 	return l.input[position:l.position]
 }
 
-func (l *Lexer) readString() string {
+// readString reads a double quoted string literal and reports whether it was
+// terminated by a closing quote.
+func (l *Lexer) readString() (string, bool) {
 	position := l.position + 1
 	for {
 		l.readChar()
@@ -124,7 +131,7 @@ func (l *Lexer) readString() string {
 		}
 	}
 
-	return l.input[position:l.position]
+	return l.input[position:l.position], l.ch == '"'
 }
 
 func (l *Lexer) skipWhiteSpace() {

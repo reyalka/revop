@@ -218,6 +218,26 @@ func TestErrorHandling(t *testing.T) {
 			`let x = 5; x + "Hello"`,
 			"type mismatch: INTEGER + STRING",
 		},
+		{
+			"1 / 0",
+			"division by zero",
+		},
+		{
+			"let f = fn(x) { x }; f()",
+			"wrong number of arguments. got=0, want=1",
+		},
+		{
+			"let f = fn(x) { x }; f(1, 2)",
+			"wrong number of arguments. got=2, want=1",
+		},
+		{
+			"[{ let x = 1; }]",
+			"expression produced no value: { let x = 1; }",
+		},
+		{
+			"map([1], fn(x) { let y = x; })",
+			"function passed to `map` produced no value",
+		},
 	}
 
 	for _, tt := range tests {
@@ -621,4 +641,19 @@ func testNullObject(t *testing.T, obj object.Object) bool {
 	}
 
 	return true
+}
+
+func TestHigherOrderBuiltinsUnwrapReturnValues(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"sum(map([1, 2, 3], fn(x) { return x * 2; }))", 12},
+		{"sum(filter([1, 2, 3], fn(x) { return x > 1; }))", 5},
+		{"reduce([1, 2, 3], fn(acc, x) { return acc + x; }, 0)", 6},
+	}
+
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
 }

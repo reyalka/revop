@@ -58,9 +58,12 @@ func init() {
 					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
 					extendedEnv.Set(fn.Parameters[0].Value, elem)
 
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := unwrapReturnValue(Eval(fn.Body, extendedEnv))
 					if isError(evaluated) {
 						return evaluated
+					}
+					if evaluated == nil {
+						return object.NewError("function passed to `map` produced no value")
 					}
 					newElements[i] = evaluated
 				}
@@ -90,9 +93,13 @@ func init() {
 					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
 					extendedEnv.Set(fn.Parameters[0].Value, elem)
 
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := unwrapReturnValue(Eval(fn.Body, extendedEnv))
 					if isError(evaluated) {
 						return evaluated
+					}
+
+					if evaluated == nil {
+						return object.NewError("function passed to `filter` produced no value")
 					}
 
 					result, ok := evaluated.(*object.Boolean)
@@ -130,9 +137,12 @@ func init() {
 					extendedEnv.Set(fn.Parameters[0].Value, accumulator)
 					extendedEnv.Set(fn.Parameters[1].Value, elem)
 
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := unwrapReturnValue(Eval(fn.Body, extendedEnv))
 					if isError(evaluated) {
 						return evaluated
+					}
+					if evaluated == nil {
+						return object.NewError("function passed to `reduce` produced no value")
 					}
 					accumulator = evaluated
 				}

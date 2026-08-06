@@ -55,6 +55,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return val
 		}
 		env.Set(node.Name.Value, val)
+		return nil
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body
@@ -90,7 +91,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIndexExpression(left, index)
 	}
 
-	return nil
+	return object.NewError("unsupported node type: %T", node)
 }
 
 func evalProgram(program *ast.Program, env *object.Environment) object.Object {
@@ -126,7 +127,7 @@ func evalPrefixExpression(op string, right object.Object) object.Object {
 	case "-":
 		return evalMinusPrefixOperatorExpression(right)
 	default:
-		return nil
+		return object.NewError("unknown operator: %s%s", op, right.Type())
 	}
 }
 
@@ -196,6 +197,9 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 	case "*":
 		return &object.Integer{Value: leftVal * rightVal}
 	case "/":
+		if rightVal == 0 {
+			return object.NewError("division by zero")
+		}
 		return &object.Integer{Value: leftVal / rightVal}
 	case "<":
 		return toBooleanObject(leftVal < rightVal)
@@ -267,6 +271,9 @@ func evalExpressions(exprs []ast.Expression, env *object.Environment) []object.O
 		if isError(evaluated) {
 			return []object.Object{evaluated}
 		}
+		if evaluated == nil {
+			return []object.Object{object.NewError("expression produced no value: %s", e.String())}
+		}
 		result = append(result, evaluated)
 	}
 
@@ -292,6 +299,9 @@ func evalIndexExpression(left, index object.Object) object.Object {
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
+		if len(args) != len(fn.Parameters) {
+			return object.NewError("wrong number of arguments. got=%d, want=%d", len(args), len(fn.Parameters))
+		}
 		extendedEnv := extendedFunctionEnv(fn, args)
 		evaluated := Eval(fn.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)

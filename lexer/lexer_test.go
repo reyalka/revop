@@ -141,3 +141,15 @@ func TestNextToken(t *testing.T) {
 		}
 	}
 }
+
+func TestUnterminatedStringIsIllegal(t *testing.T) {
+	l := New(`"foo`)
+
+	tok := l.NextToken()
+	if tok.Type != token.ILLEGAL {
+		t.Fatalf("tokentype wrong. expected=%q, got=%q", token.ILLEGAL, tok.Type)
+	}
+	if tok.Literal != "foo" {
+		t.Fatalf("literal wrong. expected=%q, got=%q", "foo", tok.Literal)
+	}
+}

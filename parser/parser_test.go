@@ -965,3 +965,35 @@ func checkParserErrors(t *testing.T, p *Parser) {
 	}
 	t.FailNow()
 }
+
+func TestParseErrorsDoNotProduceNilAST(t *testing.T) {
+	inputs := []string{
+		"let x = ;",
+		"return ;",
+		"if (true) { 1",
+		"fn(x) { x",
+		"[1, ]",
+		"foo(1, )",
+		"(1",
+		"1 +",
+		"x[",
+	}
+
+	for _, input := range inputs {
+		p := New(lexer.New(input))
+		program := p.ParseProgram()
+
+		if len(p.Errors()) == 0 {
+			t.Errorf("expected parser errors for %q, got none", input)
+		}
+
+		for i, stmt := range program.Statements {
+			if stmt == nil {
+				t.Errorf("input %q: statement %d is nil", input, i)
+			}
+		}
+
+		// String() must not panic on a partially parsed program.
+		_ = program.String()
+	}
+}
