@@ -1,9 +1,17 @@
 package evaluator
 
 import (
+	"math"
+
 	"revop/ast"
 	"revop/object"
 )
+
+// maxCallDepth bounds nested function calls so runaway recursion returns an
+// error instead of exhausting the goroutine stack.
+const maxCallDepth = 1000
+
+var callDepth int
 
 var (
 	TRUE  = &object.Boolean{Value: true}
@@ -196,6 +204,12 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 	case "*":
 		return &object.Integer{Value: leftVal * rightVal}
 	case "/":
+		if rightVal == 0 {
+			return object.NewError("division by zero")
+		}
+		if leftVal == math.MinInt64 && rightVal == -1 {
+			return object.NewError("integer overflow: %d / %d", leftVal, rightVal)
+		}
 		return &object.Integer{Value: leftVal / rightVal}
 	case "<":
 		return toBooleanObject(leftVal < rightVal)
@@ -292,10 +306,22 @@ func evalIndexExpression(left, index object.Object) object.Object {
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
+		if callDepth >= maxCallDepth {
+			return object.NewError("maximum call depth exceeded: %d", maxCallDepth)
+		}
+		callDepth++
+		defer func() { callDepth-- }()
+
 		extendedEnv := extendedFunctionEnv(fn, args)
 		evaluated := Eval(fn.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.Builtin:
+		if callDepth >= maxCallDepth {
+			return object.NewError("maximum call depth exceeded: %d", maxCallDepth)
+		}
+		callDepth++
+		defer func() { callDepth-- }()
+
 		return fn.Run(args...)
 	default:
 		return object.NewError("not a function: %s", fn.Type())

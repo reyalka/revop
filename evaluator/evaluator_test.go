@@ -172,6 +172,18 @@ func TestErrorHandling(t *testing.T) {
 			"type mismatch: INTEGER + BOOLEAN",
 		},
 		{
+			"5 / 0;",
+			"division by zero",
+		},
+		{
+			"(-9223372036854775807 - 1) / -1;",
+			"integer overflow: -9223372036854775808 / -1",
+		},
+		{
+			"let f = fn(x) { f(x + 1) }; f(1)",
+			"maximum call depth exceeded: 1000",
+		},
+		{
 			"5 + true; 5;",
 			"type mismatch: INTEGER + BOOLEAN",
 		},
