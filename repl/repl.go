@@ -12,14 +12,22 @@ import (
 
 const PROMPT = ">> "
 
+// maxLineSize bounds a single input line so that overlong input is reported
+// instead of silently ending the session.
+const maxLineSize = 1024 * 1024
+
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	scanner.Buffer(make([]byte, 0, bufio.MaxScanTokenSize), maxLineSize)
 	env := object.NewEnvironment()
 
 	for {
 		fmt.Print(PROMPT)
 		scanned := scanner.Scan()
 		if !scanned {
+			if err := scanner.Err(); err != nil {
+				_, _ = fmt.Fprintf(out, "input error: %s\n", err)
+			}
 			return
 		}
 
