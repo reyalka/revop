@@ -1,9 +1,9 @@
 package token
 
-type TokenType string
+type Type string
 
 type Token struct {
-	Type    TokenType
+	Type    Type
 	Literal string
 }
 
@@ -46,14 +46,14 @@ const (
 	RETURN   = "RETURN"
 )
 
-func New(tokenType TokenType, ch byte) Token {
+func New(tokenType Type, ch byte) Token {
 	return Token{
 		Type:    tokenType,
 		Literal: string(ch),
 	}
 }
 
-var keywords = map[string]TokenType{
+var keywords = map[string]Type{
 	"fn":     FUNCTION,
 	"let":    LET,
 	"true":   TRUE,
@@ -64,7 +64,7 @@ var keywords = map[string]TokenType{
 }
 
 // 識別子が予約語であればkeywordのTokenTypeを、そうでなければ単にIDENTを返す
-func LookupIdent(ident string) TokenType {
+func LookupIdent(ident string) Type {
 	if tok, ok := keywords[ident]; ok {
 		return tok
 	}

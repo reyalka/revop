@@ -139,7 +139,7 @@ func (l *Lexer) peekChar() byte {
 	}
 }
 
-func (l *Lexer) makeTwoCharToken(tokenType token.TokenType) token.Token {
+func (l *Lexer) makeTwoCharToken(tokenType token.Type) token.Token {
 	ch := l.ch
 	l.readChar()
 	literal := string(ch) + string(l.ch)
