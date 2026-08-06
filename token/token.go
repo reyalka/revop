@@ -13,15 +13,15 @@ const (
 
 	IDENT  = "IDENT"
 	INT    = "INT"
-	STRING = "string"
+	STRING = "STRING"
 
-	ASSIGN = "="
-
+	ASSIGN   = "="
 	PLUS     = "+"
 	MINUS    = "-"
 	BANG     = "!"
 	ASTERISK = "*"
 	SLASH    = "/"
+	COLON    = ":"
 
 	LT     = "<"
 	GT     = ">"
@@ -30,12 +30,13 @@ const (
 
 	COMMA     = ","
 	SEMICOLON = ";"
-	LPAREN    = "("
-	RPAREN    = ")"
-	LBRACE    = "{"
-	RBRACE    = "}"
-	LBRACKET  = "["
-	RBRACKET  = "]"
+
+	LPAREN   = "("
+	RPAREN   = ")"
+	LBRACE   = "{"
+	RBRACE   = "}"
+	LBRACKET = "["
+	RBRACKET = "]"
 
 	FUNCTION = "FUNCTION"
 	LET      = "LET"

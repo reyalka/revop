@@ -7,7 +7,7 @@ linters:
     - errcheck      # エラーの握りつぶしを検出
     - govet          # go vet相当
     - ineffassign    # 使われない代入
-    - staticcheck    # バグ・非推奨API・簡略化提案(旧gosimpleも統合済み)
+    - staticcheck    # バグ・非推奨API・簡略化提案
     - unused         # 未使用の変数・関数・型
     - revive         # golintの後継。命名・コメント規約など
     - gocritic       # スタイル・パフォーマンスの追加診断
