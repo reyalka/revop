@@ -69,6 +69,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FUNCTION, p.parseFunctionLiteral)
 	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	p.registerPrefix(token.LBRACKET, p.parseArrayLiteral)
+	p.registerPrefix(token.HASH, p.parseHashMapLiteral)
 
 	p.infixParseFns = make(map[token.Type]infixParseFn)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
@@ -404,6 +405,56 @@ func (p *Parser) parseIndexExpression(left ast.Expression) ast.Expression {
 	}
 
 	return expr
+}
+
+func (p *Parser) parseHashMapLiteral() ast.Expression {
+	// skip "#"
+	p.nextToken()
+
+	hashMap := &ast.HashMapLiteral{Token: p.curToken}
+	hashMap.Pairs = make(map[ast.Expression]ast.Expression)
+
+	for !p.peekTokenIs(token.RBRACE) {
+		p.nextToken()
+		key := p.parseHashMapKey()
+
+		if !p.expectPeek(token.COLON) {
+			return nil
+		}
+		p.nextToken()
+
+		value := p.parseExpression(LOWEST)
+
+		hashMap.Pairs[key] = value
+
+		if !p.peekTokenIs(token.RBRACE) && !p.expectPeek(token.COMMA) {
+			return nil
+		}
+	}
+
+	if !p.expectPeek(token.RBRACE) {
+		return nil
+	}
+
+	return hashMap
+}
+
+func (p *Parser) parseHashMapKey() ast.Expression {
+	switch p.curToken.Type {
+	case token.LBRACKET:
+		p.nextToken()
+		key := p.parseExpression(LOWEST)
+		if !p.expectPeek(token.RBRACKET) {
+			return nil
+		}
+
+		return key
+	case token.IDENT:
+		key := &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+		return key
+	default:
+		return nil
+	}
 }
 
 func (p *Parser) registerPrefix(t token.Type, fn prefixParseFn) {

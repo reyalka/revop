@@ -158,6 +158,21 @@ func TestNodeString(t *testing.T) {
 			"[1, x]",
 		},
 		{
+			"hash map literal",
+			&HashMapLiteral{
+				Token: token.Token{Type: token.LBRACE, Literal: "{"},
+				Pairs: map[Expression]Expression{
+					&StringLiteral{Token: token.Token{Type: token.STRING, Literal: "a"}, Value: "a"}: intLit("1", 1),
+				},
+			},
+			"{a:1}",
+		},
+		{
+			"empty hash map literal",
+			&HashMapLiteral{Token: token.Token{Type: token.LBRACE, Literal: "{"}},
+			"{}",
+		},
+		{
 			"index expression",
 			&IndexExpression{
 				Token: token.Token{Type: token.LBRACKET, Literal: "["},
@@ -198,6 +213,7 @@ func TestTokenLiteral(t *testing.T) {
 		{"string literal", &StringLiteral{Token: token.Token{Type: token.STRING, Literal: "hello"}}, "hello"},
 		{"array literal", &ArrayLiteral{Token: token.Token{Type: token.LBRACKET, Literal: "["}}, "["},
 		{"index expression", &IndexExpression{Token: token.Token{Type: token.LBRACKET, Literal: "["}}, "["},
+		{"hash map literal", &HashMapLiteral{Token: token.Token{Type: token.LBRACE, Literal: "{"}}, "{"},
 	}
 
 	for _, tt := range tests {

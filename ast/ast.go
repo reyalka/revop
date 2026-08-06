@@ -326,3 +326,26 @@ func (ie *IndexExpression) String() string {
 
 	return out.String()
 }
+
+type HashMapLiteral struct {
+	Token token.Token
+	Pairs map[Expression]Expression
+}
+
+// implement `Expression` and `Node` interface
+func (hm *HashMapLiteral) expressionNode()      {}
+func (hm *HashMapLiteral) TokenLiteral() string { return hm.Token.Literal }
+func (hm *HashMapLiteral) String() string {
+	var out bytes.Buffer
+
+	pairs := []string{}
+	for key, value := range hm.Pairs {
+		pairs = append(pairs, key.String()+":"+value.String())
+	}
+
+	out.WriteString("{")
+	out.WriteString(strings.Join(pairs, ", "))
+	out.WriteString("}")
+
+	return out.String()
+}

@@ -28,7 +28,7 @@ func TestNextToken(t *testing.T) {
 	"foobar";
 	"foo bar";
 	[1, 2, "foo"];
-	{"foo": "bar"};
+	#{"foo": "bar"};
 	`
 
 	tests := []struct {
@@ -120,6 +120,7 @@ func TestNextToken(t *testing.T) {
 		{token.STRING, "foo"},
 		{token.RBRACKET, "]"},
 		{token.SEMICOLON, ";"},
+		{token.HASH, "#"},
 		{token.LBRACE, "{"},
 		{token.STRING, "foo"},
 		{token.COLON, ":"},

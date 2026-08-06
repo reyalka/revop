@@ -29,6 +29,7 @@ func TestExpressionNodes(_ *testing.T) {
 		&StringLiteral{},
 		&ArrayLiteral{},
 		&IndexExpression{},
+		&HashMapLiteral{},
 	}
 
 	for _, e := range expressions {
