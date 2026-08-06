@@ -4,6 +4,43 @@ import "revop/object"
 
 var builtins map[string]*object.Builtin
 
+// expectArray asserts that arg is an Array, returning an error object described
+// by label (e.g. "argument to `sum`") when it is not.
+func expectArray(arg object.Object, label string) (*object.Array, object.Object) {
+	if arg.Type() != object.ARRAY {
+		return nil, object.NewError("%s must be ARRAY, got %s", label, arg.Type())
+	}
+	return arg.(*object.Array), nil
+}
+
+// expectFunction asserts that arg is a Function, returning an error object
+// described by label when it is not.
+func expectFunction(arg object.Object, label string) (*object.Function, object.Object) {
+	if arg.Type() != object.FUNCTION {
+		return nil, object.NewError("%s must be FUNCTION, got %s", label, arg.Type())
+	}
+	return arg.(*object.Function), nil
+}
+
+// expectParams asserts that the callback passed to builtin name has exactly
+// count parameters, returning an error object when it does not.
+func expectParams(fn *object.Function, name string, count int) object.Object {
+	if len(fn.Parameters) != count {
+		return object.NewError("function passed to `%s` must have exactly %d parameters, got %d", name, count, len(fn.Parameters))
+	}
+	return nil
+}
+
+// evalCallback applies a user function to args in a fresh enclosed environment,
+// binding each parameter positionally.
+func evalCallback(fn *object.Function, args ...object.Object) object.Object {
+	env := object.NewEnclosedEnvironment(fn.Env)
+	for i, arg := range args {
+		env.Set(fn.Parameters[i].Value, arg)
+	}
+	return Eval(fn.Body, env)
+}
+
 func init() {
 	builtins = map[string]*object.Builtin{
 		"len": {
@@ -22,11 +59,11 @@ func init() {
 		"push": {
 			Args: 2,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.ARRAY {
-					return object.NewError("first argument to `push` must be ARRAY, got %s", args[0].Type())
+				arr, err := expectArray(args[0], "first argument to `push`")
+				if err != nil {
+					return err
 				}
 
-				arr := args[0].(*object.Array)
 				length := len(arr.Elements)
 
 				newElements := make([]object.Object, length+1)
@@ -39,26 +76,21 @@ func init() {
 		"map": {
 			Args: 2,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.ARRAY {
-					return object.NewError("first argument to `map` must be ARRAY, got %s", args[0].Type())
+				arr, err := expectArray(args[0], "first argument to `map`")
+				if err != nil {
+					return err
 				}
-				if args[1].Type() != object.FUNCTION {
-					return object.NewError("second argument to `map` must be FUNCTION, got %s", args[1].Type())
+				fn, err := expectFunction(args[1], "second argument to `map`")
+				if err != nil {
+					return err
 				}
-
-				arr := args[0].(*object.Array)
-				fn := args[1].(*object.Function)
-
-				if len(fn.Parameters) != 1 {
-					return object.NewError("function passed to `map` must have exactly 1 parameters, got %d", len(fn.Parameters))
+				if err := expectParams(fn, "map", 1); err != nil {
+					return err
 				}
 
 				newElements := make([]object.Object, len(arr.Elements))
 				for i, elem := range arr.Elements {
-					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, elem)
-
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := evalCallback(fn, elem)
 					if isError(evaluated) {
 						return evaluated
 					}
@@ -71,26 +103,21 @@ func init() {
 		"filter": {
 			Args: 2,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.ARRAY {
-					return object.NewError("first argument to `filter` must be ARRAY, got %s", args[0].Type())
+				arr, err := expectArray(args[0], "first argument to `filter`")
+				if err != nil {
+					return err
 				}
-				if args[1].Type() != object.FUNCTION {
-					return object.NewError("second argument to `filter` must be FUNCTION, got %s", args[1].Type())
+				fn, err := expectFunction(args[1], "second argument to `filter`")
+				if err != nil {
+					return err
 				}
-
-				arr := args[0].(*object.Array)
-				fn := args[1].(*object.Function)
-
-				if len(fn.Parameters) != 1 {
-					return object.NewError("function passed to `filter` must have exactly 1 parameters, got %d", len(fn.Parameters))
+				if err := expectParams(fn, "filter", 1); err != nil {
+					return err
 				}
 
 				var newElements []object.Object
 				for _, elem := range arr.Elements {
-					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, elem)
-
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := evalCallback(fn, elem)
 					if isError(evaluated) {
 						return evaluated
 					}
@@ -110,27 +137,22 @@ func init() {
 		"reduce": {
 			Args: 3,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.ARRAY {
-					return object.NewError("first argument to `reduce` must be ARRAY, got %s", args[0].Type())
+				arr, err := expectArray(args[0], "first argument to `reduce`")
+				if err != nil {
+					return err
 				}
-				if args[1].Type() != object.FUNCTION {
-					return object.NewError("second argument to `reduce` must be FUNCTION, got %s", args[1].Type())
+				fn, err := expectFunction(args[1], "second argument to `reduce`")
+				if err != nil {
+					return err
 				}
-
-				arr := args[0].(*object.Array)
-				fn := args[1].(*object.Function)
 				accumulator := args[2]
 
-				if len(fn.Parameters) != 2 {
-					return object.NewError("function passed to `reduce` must have exactly 2 parameters, got %d", len(fn.Parameters))
+				if err := expectParams(fn, "reduce", 2); err != nil {
+					return err
 				}
 
 				for _, elem := range arr.Elements {
-					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, accumulator)
-					extendedEnv.Set(fn.Parameters[1].Value, elem)
-
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := evalCallback(fn, accumulator, elem)
 					if isError(evaluated) {
 						return evaluated
 					}
@@ -143,11 +165,11 @@ func init() {
 		"pop": {
 			Args: 1,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.ARRAY {
-					return object.NewError("argument to `pop` must be ARRAY, got %s", args[0].Type())
+				arr, err := expectArray(args[0], "argument to `pop`")
+				if err != nil {
+					return err
 				}
 
-				arr := args[0].(*object.Array)
 				length := len(arr.Elements)
 
 				if length == 0 {
@@ -163,11 +185,11 @@ func init() {
 		"sum": {
 			Args: 1,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.ARRAY {
-					return object.NewError("argument to `sum` must be ARRAY, got %s", args[0].Type())
+				arr, err := expectArray(args[0], "argument to `sum`")
+				if err != nil {
+					return err
 				}
 
-				arr := args[0].(*object.Array)
 				var sum int64 = 0
 
 				for _, elem := range arr.Elements {
@@ -185,11 +207,11 @@ func init() {
 		"reverse": {
 			Args: 1,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.ARRAY {
-					return object.NewError("argument to `reverse` must be ARRAY, got %s", args[0].Type())
+				arr, err := expectArray(args[0], "argument to `reverse`")
+				if err != nil {
+					return err
 				}
 
-				arr := args[0].(*object.Array)
 				length := len(arr.Elements)
 
 				newElements := make([]object.Object, length)
