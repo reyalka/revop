@@ -65,7 +65,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 			return fn
 		}
 		args := evalExpressions(node.Arguments, env)
-		if len(args) == 1 && isError(args[0]) {
+		if isErrorList(args) {
 			return args[0]
 		}
 		return applyFunction(fn, args)
@@ -73,7 +73,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return &object.String{Value: node.Value}
 	case *ast.ArrayLiteral:
 		elements := evalExpressions(node.Elements, env)
-		if len(elements) == 1 && isError(elements[0]) {
+		if isErrorList(elements) {
 			return elements[0]
 		}
 		return &object.Array{Elements: elements}
@@ -333,4 +333,10 @@ func isError(obj object.Object) bool {
 		return obj.Type() == object.ERROR
 	}
 	return false
+}
+
+// isErrorList reports whether objs is the single-element slice that
+// evalExpressions returns to propagate an evaluation error.
+func isErrorList(objs []object.Object) bool {
+	return len(objs) == 1 && isError(objs[0])
 }

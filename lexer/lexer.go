@@ -100,16 +100,17 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func (l *Lexer) readIdentifier() string {
-	position := l.position
-	for isLetter(l.ch) {
-		l.readChar()
-	}
-	return l.input[position:l.position]
+	return l.readWhile(isLetter)
 }
 
 func (l *Lexer) readNumber() string {
+	return l.readWhile(isDigit)
+}
+
+// readWhile consumes characters while pred holds and returns the scanned span.
+func (l *Lexer) readWhile(pred func(byte) bool) string {
 	position := l.position
-	for isDigit(l.ch) {
+	for pred(l.ch) {
 		l.readChar()
 	}
 	return l.input[position:l.position]
