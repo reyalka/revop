@@ -8,20 +8,20 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
-	_ = x[INTEGER_OBJ-1]
-	_ = x[BOOLEAN_OBJ-2]
-	_ = x[NULL_OBJ-3]
-	_ = x[RETURN_VALUE_OBJ-4]
-	_ = x[ERROR_OBJ-5]
-	_ = x[FUNCTION_OBJ-6]
-	_ = x[STRING_OBJ-7]
-	_ = x[BUILTIN_OBJ-8]
-	_ = x[ARRAY_OBJ-9]
+	_ = x[INTEGER-1]
+	_ = x[BOOLEAN-2]
+	_ = x[NULL-3]
+	_ = x[RETURN_VALUE-4]
+	_ = x[ERROR-5]
+	_ = x[FUNCTION-6]
+	_ = x[STRING-7]
+	_ = x[BUILTIN-8]
+	_ = x[ARRAY-9]
 }
 
-const _ObjectType_name = "INTEGER_OBJBOOLEAN_OBJNULL_OBJRETURN_VALUE_OBJERROR_OBJFUNCTION_OBJSTRING_OBJBUILTIN_OBJARRAY_OBJ"
+const _ObjectType_name = "INTEGERBOOLEANNULLRETURN_VALUEERRORFUNCTIONSTRINGBUILTINARRAY"
 
-var _ObjectType_index = [...]uint8{0, 11, 22, 30, 46, 55, 67, 77, 88, 97}
+var _ObjectType_index = [...]uint8{0, 7, 14, 18, 30, 35, 43, 49, 56, 61}
 
 func (i ObjectType) String() string {
 	idx := int(i) - 1

@@ -77,7 +77,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if len(elements) == 1 && isError(elements[0]) {
 			return elements[0]
 		}
-		return  &object.Array{Elements: elements}
+		return &object.Array{Elements: elements}
 	}
 
 	return nil
@@ -135,7 +135,7 @@ func evalPrefixExpression(op string, right object.Object) object.Object {
 }
 
 func evalBangOperatorExpression(right object.Object) object.Object {
-	if right.Type() != object.BOOLEAN_OBJ {
+	if right.Type() != object.BOOLEAN {
 		return newError("unknown operator: !%s", right.Type())
 	}
 
@@ -151,7 +151,7 @@ func evalBangOperatorExpression(right object.Object) object.Object {
 }
 
 func evalMinusPrefixOperatorExpression(right object.Object) object.Object {
-	if right.Type() != object.INTEGER_OBJ {
+	if right.Type() != object.INTEGER {
 		return newError("unknown operator: -%s", right.Type())
 	}
 
@@ -161,11 +161,11 @@ func evalMinusPrefixOperatorExpression(right object.Object) object.Object {
 
 func evalInfixExpression(op string, left, right object.Object) object.Object {
 	switch {
-	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
+	case left.Type() == object.INTEGER && right.Type() == object.INTEGER:
 		return evalIntegerInfixExpression(op, left, right)
-	case left.Type() == object.BOOLEAN_OBJ && right.Type() == object.BOOLEAN_OBJ:
+	case left.Type() == object.BOOLEAN && right.Type() == object.BOOLEAN:
 		return evalBooleanInfixExpression(op, left, right)
-	case left.Type() == object.STRING_OBJ && right.Type() == object.STRING_OBJ:
+	case left.Type() == object.STRING && right.Type() == object.STRING:
 		return evalStringInfixExpression(op, left, right)
 	case left.Type() != right.Type():
 		return newError("type mismatch: %s %s %s", left.Type(), op, right.Type())
@@ -236,7 +236,7 @@ func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Obje
 		return cond
 	}
 
-	if cond.Type() != object.BOOLEAN_OBJ {
+	if cond.Type() != object.BOOLEAN {
 		return NULL
 	}
 
@@ -255,7 +255,7 @@ func evalBlockStatement(block *ast.Block, env *object.Environment) object.Object
 	for _, stmt := range block.Statements {
 		result = Eval(stmt, env)
 
-		if result != nil && (result.Type() == object.RETURN_VALUE_OBJ || result.Type() == object.ERROR_OBJ) {
+		if result != nil && (result.Type() == object.RETURN_VALUE || result.Type() == object.ERROR) {
 			return result
 		}
 	}
@@ -322,7 +322,7 @@ func newError(format string, a ...any) *object.Error {
 
 func isError(obj object.Object) bool {
 	if obj != nil {
-		return obj.Type() == object.ERROR_OBJ
+		return obj.Type() == object.ERROR
 	}
 	return false
 }
