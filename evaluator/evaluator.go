@@ -41,6 +41,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if ok {
 			return evaluated
 		}
+		
 		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
