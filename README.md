@@ -10,3 +10,5 @@ go run github.com/reyalka/revop
 
 # Grammer
 文法については[examples/main.rv](https://github.com/reyalka/revop/blob/main/examples/main.rv)を参考にしてください。
+
+パイプライン(`|>`)もあります -> [examples/pipe.rv](https://github.com/reyalka/revop/blob/main/examples/pipe.rv)
