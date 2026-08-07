@@ -1,0 +1,7 @@
+let double = fn(x) { x * 2 };
+let li = [1, 2, 3, 4, 5];
+li 
+    |> map(double)              // [2, 4, 6, 8, 10]
+    |> filter(fn(x) { x > 5 })  // [6, 8, 10]
+    |> sum                      // 6 + 8 + 10 = 24
+    |> echo;

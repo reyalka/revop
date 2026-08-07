@@ -1,0 +1,62 @@
+// simple arithmetic operations
+let x = 10;
+let y = 5;
+echo(x + y); // 15
+echo(x - y); // 5
+echo(x * y); // 50
+echo(x / y); // 2
+echo(x ^ y); // 100000
+
+// mutable variable
+let mut counter = 10;
+let increment = fn() {
+    counter = counter + 1;
+    counter;
+};
+echo(increment()); // 11
+echo(increment()); // 12
+echo(increment()); // 13
+
+// if statements
+if (x > y) {
+    echo("x is greater than y"); // x is greater than y
+} else {
+    echo("x is not greater than y");
+}
+
+// if expressions
+let enabled = true;
+let result = if (enabled) {
+    "Enabled";
+} else {
+    "Disabled";
+};
+echo(result); // Enabled
+
+// block expression
+let sum = {
+    let a = 5;
+    let b = 10;
+    a + b;
+};
+echo(sum); // 15
+
+// function definition and call
+let makeAdder = fn(x) {
+    fn(y) { x + y };
+};
+let addFive = makeAdder(5);
+echo(addFive(10)); // 15
+
+// array and hashMap literals
+let arr = [1, 2, 3, 4, 5];
+echo(arr[0]); // 1
+let map = #{foo: "bar", baz: 42, [42]: "answer"};
+echo(map["foo"]); // bar
+echo(map["baz"]); // 42
+echo(map[42]); // answer
+
+// len
+echo(len(arr)); // 5
+echo(len(map)); // 3
+echo(len("revop")); // 5
