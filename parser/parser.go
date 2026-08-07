@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	_ int = iota
+	_ int = iota * 10
 	LOWEST
 	ASSIGN     // a = 5
 	EQUALS     // == !=
