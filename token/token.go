@@ -23,6 +23,8 @@ const (
 	HASH      Type = "#"
 	LT        Type = "<"
 	GT        Type = ">"
+	LE        Type = "<="
+	GE        Type = ">="
 	EQ        Type = "=="
 	NOT_EQ    Type = "!="
 	COMMA     Type = ","
