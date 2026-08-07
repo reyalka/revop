@@ -14,9 +14,9 @@ func TestLetStatements(t *testing.T) {
 		expectedValue      any
 		mutable            bool
 	}{
-		// {"let x = 5;", "x", 5, false},
-		// {"let y = true;", "y", true, false},
-		// {"let foobar = y;", "foobar", "y", false},
+		{"let x = 5;", "x", 5, false},
+		{"let y = true;", "y", true, false},
+		{"let foobar = y;", "foobar", "y", false},
 		{"let mut a = 5;", "a", 5, true},
 	}
 
