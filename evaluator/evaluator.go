@@ -205,6 +205,10 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 		return toBooleanObject(leftVal < rightVal)
 	case ">":
 		return toBooleanObject(leftVal > rightVal)
+	case "<=":
+		return toBooleanObject(leftVal <= rightVal)
+	case ">=":
+		return toBooleanObject(leftVal >= rightVal)
 	case "==":
 		return toBooleanObject(leftVal == rightVal)
 	case "!=":
