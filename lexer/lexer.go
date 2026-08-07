@@ -83,6 +83,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.New(token.COLON, l.ch)
 	case '#':
 		tok = token.New(token.HASH, l.ch)
+	case '|':
+		if l.peekChar() == '>' {
+			tok = l.makeTwoCharToken(token.PIPE)
+		}
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()

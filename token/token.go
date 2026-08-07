@@ -33,6 +33,7 @@ const (
 	RBRACE    Type = "}"
 	LBRACKET  Type = "["
 	RBRACKET  Type = "]"
+	PIPE      Type = "|>"
 	FUNCTION  Type = "FUNCTION"
 	LET       Type = "LET"
 	TRUE      Type = "TRUE"

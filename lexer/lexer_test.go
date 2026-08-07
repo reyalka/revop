@@ -30,6 +30,7 @@ func TestNextToken(t *testing.T) {
 	[1, 2, "foo"];
 	#{"foo": "bar"};
 	let mut a = 5;
+	x |> f;
 	`
 
 	tests := []struct {
@@ -133,6 +134,10 @@ func TestNextToken(t *testing.T) {
 		{token.IDENT, "a"},
 		{token.ASSIGN, "="},
 		{token.INT, "5"},
+		{token.SEMICOLON, ";"},
+		{token.IDENT, "x"},
+		{token.PIPE, "|>"},
+		{token.IDENT, "f"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}
