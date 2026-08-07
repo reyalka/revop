@@ -48,7 +48,8 @@ type LetStatement struct {
 	// 識別子
 	Name *Identifier
 	// 値
-	Value Expression
+	Value   Expression
+	Mutable bool
 }
 
 // implement `Statement` and `Node` interface
@@ -58,12 +59,35 @@ func (ls *LetStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(ls.TokenLiteral() + " ")
+	if ls.Mutable {
+		out.WriteString("mut ")
+	}
 	out.WriteString(ls.Name.String())
 	out.WriteString(" = ")
 	if ls.Value != nil {
 		out.WriteString(ls.Value.String())
 	}
 	out.WriteString(";")
+	return out.String()
+}
+
+type AssignExpression struct {
+	Token token.Token // token.ASSIGN token
+	Name  *Identifier
+	Value Expression
+}
+
+// implement `Expression` and `Node` interface
+func (ae *AssignExpression) expressionNode()      {}
+func (ae *AssignExpression) TokenLiteral() string { return ae.Token.Literal }
+func (ae *AssignExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(ae.Name.String())
+	out.WriteString(" = ")
+	if ae.Value != nil {
+		out.WriteString(ae.Value.String())
+	}
 	return out.String()
 }
 

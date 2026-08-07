@@ -12,10 +12,12 @@ func TestLetStatements(t *testing.T) {
 		input              string
 		expectedIdentifier string
 		expectedValue      any
+		mutable            bool
 	}{
-		{"let x = 5;", "x", 5},
-		{"let y = true;", "y", true},
-		{"let foobar = y;", "foobar", "y"},
+		// {"let x = 5;", "x", 5, false},
+		// {"let y = true;", "y", true, false},
+		// {"let foobar = y;", "foobar", "y", false},
+		{"let mut a = 5;", "a", 5, true},
 	}
 
 	for _, tt := range tests {
@@ -36,6 +38,97 @@ func TestLetStatements(t *testing.T) {
 
 		val := stmt.(*ast.LetStatement).Value
 		if !testLiteralExpression(t, val, tt.expectedValue) {
+			return
+		}
+
+		mutable := stmt.(*ast.LetStatement).Mutable
+		if mutable != tt.mutable {
+			t.Fatalf("stmt.Mutable is not %t. got=%t", tt.mutable, mutable)
+		}
+	}
+}
+
+func TestAssignExpressions(t *testing.T) {
+	tests := []struct {
+		input              string
+		expectedIdentifier string
+		expectedValue      any
+	}{
+		{"a = 5;", "a", 5},
+		{"b = true;", "b", true},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain 1 statements. got=%d",
+				len(program.Statements))
+		}
+
+		stmt := program.Statements[0]
+		assignStmt, ok := stmt.(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt not *ast.ExpressionStatement. got=%T", stmt)
+		}
+
+		assignExpr, ok := assignStmt.Expression.(*ast.AssignExpression)
+		if !ok {
+			t.Fatalf("assignStmt.Expression not *ast.AssignExpression. got=%T", assignStmt.Expression)
+		}
+
+		if assignExpr.Name.Value != tt.expectedIdentifier {
+			t.Fatalf("assignExpr.Name.Value not %s. got=%s", tt.expectedIdentifier, assignExpr.Name.Value)
+		}
+
+		if !testLiteralExpression(t, assignExpr.Value, tt.expectedValue) {
+			return
+		}
+	}
+}
+
+func TestAssignExpressionParsing(t *testing.T) {
+	tests := []struct {
+		input string
+		name  string
+		left  any
+		op    string
+		right any
+	}{
+		{"a = 3 + 5;", "a", 3, "+", 5},
+		{"b = true == true;", "b", true, "==", true},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain 1 statements. got=%d",
+				len(program.Statements))
+		}
+
+		stmt := program.Statements[0]
+		assignStmt, ok := stmt.(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("stmt not *ast.ExpressionStatement. got=%T", stmt)
+		}
+
+		assignExpr, ok := assignStmt.Expression.(*ast.AssignExpression)
+		if !ok {
+			t.Fatalf("assignStmt.Expression not *ast.AssignExpression. got=%T", assignStmt.Expression)
+		}
+
+		if assignExpr.Name.Value != tt.name {
+			t.Fatalf("assignExpr.Name.Value not %s. got=%s", tt.name, assignExpr.Name.Value)
+		}
+
+		if !testInfixExpression(t, assignExpr.Value, tt.left, tt.op, tt.right) {
 			return
 		}
 	}

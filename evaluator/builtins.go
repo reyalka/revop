@@ -60,7 +60,7 @@ func init() {
 				newElements := make([]object.Object, len(arr.Elements))
 				for i, elem := range arr.Elements {
 					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, elem)
+					extendedEnv.Set(fn.Parameters[0].Value, object.Mutability{Object: elem, Mutable: false})
 
 					evaluated := Eval(fn.Body, extendedEnv)
 					if isError(evaluated) {
@@ -92,7 +92,7 @@ func init() {
 				var newElements []object.Object
 				for _, elem := range arr.Elements {
 					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, elem)
+					extendedEnv.Set(fn.Parameters[0].Value, object.Mutability{Object: elem, Mutable: false})
 
 					evaluated := Eval(fn.Body, extendedEnv)
 					if isError(evaluated) {
@@ -131,8 +131,8 @@ func init() {
 
 				for _, elem := range arr.Elements {
 					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, accumulator)
-					extendedEnv.Set(fn.Parameters[1].Value, elem)
+					extendedEnv.Set(fn.Parameters[0].Value, object.Mutability{Object: accumulator, Mutable: false})
+					extendedEnv.Set(fn.Parameters[1].Value, object.Mutability{Object: elem, Mutable: false})
 
 					evaluated := Eval(fn.Body, extendedEnv)
 					if isError(evaluated) {

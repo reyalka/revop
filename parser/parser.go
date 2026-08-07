@@ -11,6 +11,7 @@ import (
 const (
 	_ int = iota
 	LOWEST
+	ASSIGN     // a = 5
 	EQUALS     // == !=
 	LESSGRATER // < >
 	SUM        // + -
@@ -31,6 +32,7 @@ var precedences = map[token.Type]int{
 	token.SLASH:    PRODUCT,
 	token.LPAREN:   CALL,
 	token.LBRACKET: INDEX,
+	token.ASSIGN:   ASSIGN,
 }
 
 type (
@@ -82,6 +84,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
+	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
 
 	p.nextToken()
 	p.nextToken()
@@ -121,8 +124,12 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
-	stmt := &ast.LetStatement{Token: p.curToken}
+	stmt := &ast.LetStatement{Token: p.curToken, Mutable: false}
 
+	if p.peekTokenIs(token.MUT) {
+		stmt.Mutable = true
+		p.nextToken()
+	}
 	if !p.expectPeek(token.IDENT) {
 		return nil
 	}
@@ -202,6 +209,23 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 	}
 	lit.Value = value
 	return lit
+}
+
+func (p *Parser) parseAssignExpression(left ast.Expression) ast.Expression {
+	assignExpr := &ast.AssignExpression{Token: p.curToken}
+
+	ident, ok := left.(*ast.Identifier)
+	if !ok {
+		return nil
+	}
+
+	assignExpr.Name = ident
+
+	p.nextToken()
+
+	assignExpr.Value = p.parseExpression(LOWEST)
+
+	return assignExpr
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {

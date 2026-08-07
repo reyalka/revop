@@ -244,10 +244,40 @@ func TestLetStatements(t *testing.T) {
 		{"let a = 5 * 5; a;", 25},
 		{"let a = 5; let b = a; b;", 5},
 		{"let a = 5; let b = a; let c = a + b + 5; c;", 15},
+		{"let mut a = 5; a;", 5},
 	}
 
 	for _, tt := range tests {
 		testIntegerObject(t, testEval(tt.input), tt.expected)
+	}
+}
+
+func TestAssign(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected any
+	}{
+		{"let mut a = 5; a = 10; a;", 10},
+		{"let mut a = 5; let mut b = a; b = 10; b;", 10},
+		{"a = 5;", "cannot assign to undefined variable: a"},
+		{"let mut a = 5; let b = a; b = 10;", "cannot assign to immutable variable: b"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case string:
+			errObj, ok := evaluated.(*object.Error)
+			if !ok {
+				t.Errorf("object is not Error. got=%T (%+v)", evaluated, evaluated)
+				continue
+			}
+			if errObj.Message != expected {
+				t.Errorf("wrong error message. expected=%q, got=%q", expected, errObj.Message)
+			}
+		}
 	}
 }
 

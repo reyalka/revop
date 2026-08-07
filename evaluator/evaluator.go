@@ -54,7 +54,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(val) {
 			return val
 		}
-		env.Set(node.Name.Value, val)
+		env.Set(node.Name.Value, object.Mutability{Object: val, Mutable: node.Mutable})
 	case *ast.FunctionLiteral:
 		params := node.Parameters
 		body := node.Body
@@ -90,6 +90,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalIndexExpression(left, index)
 	case *ast.HashMapLiteral:
 		return evalHashMapLiteral(node, env)
+	case *ast.AssignExpression:
+		return evalAssignExpression(node, env)
 	}
 
 	return nil
@@ -113,7 +115,7 @@ func evalProgram(program *ast.Program, env *object.Environment) object.Object {
 
 func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object {
 	if val, ok := env.Get(node.Value); ok {
-		return val
+		return val.Object
 	}
 	if builtin, ok := builtins[node.Value]; ok {
 		return builtin
@@ -315,6 +317,25 @@ func evalHashMapLiteral(node *ast.HashMapLiteral, env *object.Environment) objec
 	return &object.HashMap{Pairs: pairs}
 }
 
+func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) object.Object {
+	ident := node.Name.Value
+	identifier, ok := env.Get(ident)
+	if !ok {
+		return object.NewError("cannot assign to undefined variable: %s", ident)
+	}
+	if !identifier.Mutable {
+		return object.NewError("cannot assign to immutable variable: %s", ident)
+	}
+
+	value := Eval(node.Value, env)
+	if isError(value) {
+		return value
+	}
+
+	env.Set(ident, object.Mutability{Object: value, Mutable: true})
+	return value
+}
+
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
@@ -333,7 +354,7 @@ func extendedFunctionEnv(fn *object.Function, args []object.Object) *object.Envi
 	env := object.NewEnclosedEnvironment(fn.Env)
 
 	for index, param := range fn.Parameters {
-		env.Set(param.Value, args[index])
+		env.Set(param.Value, object.Mutability{Object: args[index], Mutable: false})
 	}
 
 	return env

@@ -40,6 +40,7 @@ const (
 	IF        Type = "IF"
 	ELSE      Type = "ELSE"
 	RETURN    Type = "RETURN"
+	MUT       Type = "MUT"
 )
 
 func New(tokenType Type, ch byte) Token {
@@ -57,6 +58,7 @@ var keywords = map[string]Type{
 	"if":     IF,
 	"else":   ELSE,
 	"return": RETURN,
+	"mut":    MUT,
 }
 
 // 識別子が予約語であればkeywordのTokenTypeを、そうでなければ単にIDENTを返す

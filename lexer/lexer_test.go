@@ -29,6 +29,7 @@ func TestNextToken(t *testing.T) {
 	"foo bar";
 	[1, 2, "foo"];
 	#{"foo": "bar"};
+	let mut a = 5;
 	`
 
 	tests := []struct {
@@ -126,6 +127,12 @@ func TestNextToken(t *testing.T) {
 		{token.COLON, ":"},
 		{token.STRING, "bar"},
 		{token.RBRACE, "}"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.MUT, "mut"},
+		{token.IDENT, "a"},
+		{token.ASSIGN, "="},
+		{token.INT, "5"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}
