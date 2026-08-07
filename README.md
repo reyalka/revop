@@ -9,4 +9,4 @@ go run github.com/reyalka/revop
 ```
 
 # Grammer
-文法については[example/main.rv](https://github.com/reyalka/revop/blob/main/examples/main.rv)を参考にしてください。
+文法については[examples/main.rv](https://github.com/reyalka/revop/blob/main/examples/main.rv)を参考にしてください。
