@@ -1036,6 +1036,82 @@ func TestParsingHashMapLiteralsWithExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingPipeOperators(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			"a |> b",
+			"<b>(a)",
+		},
+		{
+			"a |> b |> c",
+			"<c>(<b>(a))",
+		},
+		{
+			"a + b |> c",
+			"<c>((a + b))",
+		},
+		{
+			"a |> b + c",
+			"<(b + c)>(a)",
+		},
+		{
+			"a |> b |> c |> d",
+			"<d>(<c>(<b>(a)))",
+		},
+		{
+			"a |> b(c)",
+			"<b>(a, c)",
+		},
+		{
+			"a |> b(c, d)",
+			"<b>(a, c, d)",
+		},
+		{
+			"a |> b(c |> d)",
+			"<b>(a, <d>(c))",
+		},
+		{
+			"a == a |> b",
+			"<b>((a == a))",
+		},
+		{
+			"a |> b == a",
+			"<(b == a)>(a)",
+		},
+		{
+			"a + b + c |> d + e + f",
+			"<((d + e) + f)>(((a + b) + c))",
+		},
+		{
+			"a |> b()",
+			"<b>(a)",
+		},
+		{
+			"a + (b |> c)",
+			"(a + <c>(b))",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+			checkParserErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			expression := stmt.Expression
+
+			if expression.String() != tt.expected {
+				t.Errorf("Expected %s, got %s", tt.expected, expression.String())
+			}
+		})
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())

@@ -12,6 +12,7 @@ const (
 	_ int = iota * 10
 	LOWEST
 	ASSIGN     // a = 5
+	PIPE       // x |> f
 	EQUALS     // == !=
 	LESSGRATER // < >
 	SUM        // + -
@@ -33,6 +34,7 @@ var precedences = map[token.Type]int{
 	token.LPAREN:   CALL,
 	token.LBRACKET: INDEX,
 	token.ASSIGN:   ASSIGN,
+	token.PIPE:     PIPE,
 }
 
 type (
@@ -85,6 +87,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
+	p.registerInfix(token.PIPE, p.parsePipeOperator)
 
 	p.nextToken()
 	p.nextToken()
@@ -255,6 +258,26 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expr.Right = p.parseExpression(precedence)
 
 	return expr
+}
+
+func (p *Parser) parsePipeOperator(left ast.Expression) ast.Expression {
+	p.nextToken()
+	right := p.parseExpression(PIPE)
+
+	switch right := right.(type) {
+	case *ast.CallExpression:
+		right.Arguments = append([]ast.Expression{left}, right.Arguments...)
+		return right
+	default:
+		callExpr := &ast.CallExpression{
+			Token:    p.curToken,
+			Function: right,
+			Arguments: []ast.Expression{
+				left,
+			},
+		}
+		return callExpr
+	}
 }
 
 func (p *Parser) parseBoolean() ast.Expression {
