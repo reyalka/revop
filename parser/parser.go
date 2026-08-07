@@ -515,7 +515,12 @@ func (p *Parser) parseHashMapKey() ast.Expression {
 	case token.IDENT:
 		key := &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
 		return key
+	case token.STRING:
+		key := &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+		return key
 	default:
+		msg := fmt.Sprintf("unexpected token `%s` found", p.curToken.Type)
+		p.errors = append(p.errors, msg)
 		return nil
 	}
 }
