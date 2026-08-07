@@ -2,8 +2,9 @@ package ast
 
 import (
 	"bytes"
-	"revop/token"
 	"strings"
+
+	"github.com/reyalka/revop/token"
 )
 
 type Node interface {

@@ -1,8 +1,9 @@
 package ast
 
 import (
-	"revop/token"
 	"testing"
+
+	"github.com/reyalka/revop/token"
 )
 
 func TestString(t *testing.T) {

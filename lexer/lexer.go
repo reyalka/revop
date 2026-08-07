@@ -1,6 +1,6 @@
 package lexer
 
-import "revop/token"
+import "github.com/reyalka/revop/token"
 
 type Lexer struct {
 	input        string

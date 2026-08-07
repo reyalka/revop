@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"revop/evaluator"
-	"revop/lexer"
-	"revop/object"
-	"revop/parser"
+
+	"github.com/reyalka/revop/evaluator"
+	"github.com/reyalka/revop/lexer"
+	"github.com/reyalka/revop/object"
+	"github.com/reyalka/revop/parser"
 )
 
 const PROMPT = ">> "

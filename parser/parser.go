@@ -2,10 +2,11 @@ package parser
 
 import (
 	"fmt"
-	"revop/ast"
-	"revop/lexer"
-	"revop/token"
 	"strconv"
+
+	"github.com/reyalka/revop/ast"
+	"github.com/reyalka/revop/lexer"
+	"github.com/reyalka/revop/token"
 )
 
 const (

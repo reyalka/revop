@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"hash/fnv"
-	"revop/ast"
 	"strings"
+
+	"github.com/reyalka/revop/ast"
 )
 
 type Type int

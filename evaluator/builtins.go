@@ -2,8 +2,9 @@ package evaluator
 
 import (
 	"fmt"
-	"revop/object"
 	"strings"
+
+	"github.com/reyalka/revop/object"
 )
 
 var builtins map[string]*object.Builtin

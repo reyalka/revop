@@ -1,8 +1,9 @@
 package lexer
 
 import (
-	"revop/token"
 	"testing"
+
+	"github.com/reyalka/revop/token"
 )
 
 func TestNextToken(t *testing.T) {

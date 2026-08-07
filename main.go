@@ -6,11 +6,12 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"revop/evaluator"
-	"revop/lexer"
-	"revop/object"
-	"revop/parser"
-	"revop/repl"
+
+	"github.com/reyalka/revop/evaluator"
+	"github.com/reyalka/revop/lexer"
+	"github.com/reyalka/revop/object"
+	"github.com/reyalka/revop/parser"
+	"github.com/reyalka/revop/repl"
 )
 
 func main() {

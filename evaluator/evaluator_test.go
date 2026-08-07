@@ -1,10 +1,11 @@
 package evaluator
 
 import (
-	"revop/lexer"
-	"revop/object"
-	"revop/parser"
 	"testing"
+
+	"github.com/reyalka/revop/lexer"
+	"github.com/reyalka/revop/object"
+	"github.com/reyalka/revop/parser"
 )
 
 func TestEvalIntegerExpression(t *testing.T) {

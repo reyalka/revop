@@ -2,8 +2,9 @@ package evaluator
 
 import (
 	"math"
-	"revop/ast"
-	"revop/object"
+
+	"github.com/reyalka/revop/ast"
+	"github.com/reyalka/revop/object"
 )
 
 var (

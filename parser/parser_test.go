@@ -2,9 +2,11 @@ package parser
 
 import (
 	"fmt"
-	"revop/ast"
-	"revop/lexer"
 	"testing"
+
+	"github.com/reyalka/revop/lexer"
+
+	"github.com/reyalka/revop/ast"
 )
 
 func TestLetStatements(t *testing.T) {

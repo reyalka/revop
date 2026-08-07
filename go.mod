@@ -1,5 +1,4 @@
-module revop
-
+module github.com/reyalka/revop
 go 1.25.0
 
 require (
