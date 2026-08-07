@@ -11,15 +11,18 @@ import (
 const (
 	_ int = iota * 10
 	LOWEST
-	ASSIGN     // a = 5
-	PIPE       // x |> f
-	EQUALS     // == !=
-	LESSGRATER // < >
-	SUM        // + -
-	PRODUCT    // * /
-	PREFIX     // -X
-	CALL       // call(X)
-	INDEX      // array[index]
+	ASSIGN      // a = 5
+	PIPE        // x |> f
+	LOGICAL_OR  // ||
+	LOGICAL_AND // &&
+	EQUALS      // == !=
+	LESSGRATER  // < >
+	SUM         // + -
+	PRODUCT     // * /
+	POW         // ^
+	PREFIX      // -X
+	CALL        // call(X)
+	INDEX       // array[index]
 )
 
 var precedences = map[token.Type]int{
@@ -33,9 +36,12 @@ var precedences = map[token.Type]int{
 	token.MINUS:    SUM,
 	token.ASTERISK: PRODUCT,
 	token.SLASH:    PRODUCT,
+	token.POW:      POW,
 	token.LPAREN:   CALL,
 	token.LBRACKET: INDEX,
 	token.ASSIGN:   ASSIGN,
+	token.AND:      LOGICAL_AND,
+	token.OR:       LOGICAL_OR,
 	token.PIPE:     PIPE,
 }
 
@@ -82,6 +88,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.ASTERISK, p.parseInfixExpression)
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
+	p.registerInfix(token.POW, p.parseInfixExpression)
 	p.registerInfix(token.EQ, p.parseInfixExpression)
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
@@ -91,6 +98,8 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LPAREN, p.parseCallExpression)
 	p.registerInfix(token.LBRACKET, p.parseIndexExpression)
 	p.registerInfix(token.ASSIGN, p.parseAssignExpression)
+	p.registerInfix(token.AND, p.parseInfixExpression)
+	p.registerInfix(token.OR, p.parseInfixExpression)
 	p.registerInfix(token.PIPE, p.parsePipeOperator)
 
 	p.nextToken()
@@ -259,6 +268,9 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 	precedence := p.curPrecedence()
 	p.nextToken()
+	if expr.Operator == "^" {
+		precedence -= 1
+	}
 	expr.Right = p.parseExpression(precedence)
 
 	return expr

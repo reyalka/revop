@@ -27,6 +27,8 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{"3 * 3 * 3 + 10", 37},
 		{"3 * (3 * 3) + 10", 37},
 		{"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
+		{"2 ^ 3", 8},
+		{"2 ^ 3 ^ 2", 512},
 	}
 
 	for _, tt := range tests {
@@ -57,6 +59,14 @@ func TestEvalBooleanExpression(t *testing.T) {
 		{"true == false", false},
 		{"true != false", true},
 		{"false != true", true},
+		{"true && true", true},
+		{"true && false", false},
+		{"false && true", false},
+		{"false && false", false},
+		{"true || true", true},
+		{"true || false", true},
+		{"false || true", true},
+		{"false || false", false},
 	}
 
 	for _, tt := range tests {
@@ -644,6 +654,21 @@ func TestHashMapLiterals(t *testing.T) {
 		}
 
 		testIntegerObject(t, pair.Value, expectedValue)
+	}
+}
+
+func TestShortCircuitEvaluation(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"true || (1 / 0 == 1)", true},
+		{"false && (1 / 0 == 1)", false},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
 

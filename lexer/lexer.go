@@ -77,9 +77,6 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			tok = token.New(token.GT, l.ch)
 		}
-	case 0:
-		tok.Literal = ""
-		tok.Type = token.EOF
 	case '"':
 		tok.Literal = l.readString()
 		tok.Type = token.STRING
@@ -94,7 +91,18 @@ func (l *Lexer) NextToken() token.Token {
 	case '|':
 		if l.peekChar() == '>' {
 			tok = l.makeTwoCharToken(token.PIPE)
+		} else if l.peekChar() == '|' {
+			tok = l.makeTwoCharToken(token.OR)
 		}
+	case '&':
+		if l.peekChar() == '&' {
+			tok = l.makeTwoCharToken(token.AND)
+		}
+	case '^':
+		tok = token.New(token.POW, l.ch)
+	case 0:
+		tok.Literal = ""
+		tok.Type = token.EOF
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readWhile(isLetter)

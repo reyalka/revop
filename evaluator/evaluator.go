@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"math"
 	"revop/ast"
 	"revop/object"
 )
@@ -28,16 +29,23 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(right) {
 			return right
 		}
+
 		return evalPrefixExpression(node.Operator, right)
 	case *ast.InfixExpression:
 		left := Eval(node.Left, env)
 		if isError(left) {
 			return left
 		}
+
+		evaluated, ok := evalShortCircuit(node.Operator, left)
+		if ok {
+			return evaluated
+		}
 		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
 		}
+
 		return evalInfixExpression(node.Operator, left, right)
 	case *ast.Block:
 		return evalBlockStatement(node, env)
@@ -48,12 +56,14 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(val) {
 			return val
 		}
+
 		return &object.ReturnValue{Value: val}
 	case *ast.LetStatement:
 		val := Eval(node.Value, env)
 		if isError(val) {
 			return val
 		}
+
 		env.Set(node.Name.Value, object.Mutability{Object: val, Mutable: node.Mutable})
 	case *ast.FunctionLiteral:
 		params := node.Parameters
@@ -64,10 +74,12 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(fn) {
 			return fn
 		}
+
 		args := evalExpressions(node.Arguments, env)
 		if len(args) == 1 && isError(args[0]) {
 			return args[0]
 		}
+
 		return applyFunction(fn, args)
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
@@ -76,6 +88,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if len(elements) == 1 && isError(elements[0]) {
 			return elements[0]
 		}
+
 		return &object.Array{Elements: elements}
 	case *ast.IndexExpression:
 		left := Eval(node.Left, env)
@@ -87,6 +100,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if isError(index) {
 			return index
 		}
+
 		return evalIndexExpression(left, index)
 	case *ast.HashMapLiteral:
 		return evalHashMapLiteral(node, env)
@@ -183,8 +197,23 @@ func evalBooleanInfixExpression(op string, left, right object.Object) object.Obj
 		return toBooleanObject(leftVal == rightVal)
 	case "!=":
 		return toBooleanObject(leftVal != rightVal)
+	case "&&":
+		return toBooleanObject(leftVal && rightVal)
+	case "||":
+		return toBooleanObject(leftVal || rightVal)
 	default:
 		return object.NewError("unknown operator: %s %s %s", left.Type(), op, right.Type())
+	}
+}
+
+func evalShortCircuit(op string, left object.Object) (object.Object, bool) {
+	switch {
+	case op == "&&" && left.Type() == object.BOOLEAN && left == FALSE:
+		return FALSE, true
+	case op == "||" && left.Type() == object.BOOLEAN && left == TRUE:
+		return TRUE, true
+	default:
+		return nil, false
 	}
 }
 
@@ -200,7 +229,14 @@ func evalIntegerInfixExpression(op string, left, right object.Object) object.Obj
 	case "*":
 		return &object.Integer{Value: leftVal * rightVal}
 	case "/":
+		if rightVal == 0 {
+			return object.NewError("division by zero")
+		}
 		return &object.Integer{Value: leftVal / rightVal}
+	case "^":
+		leftFloat := float64(leftVal)
+		rightFloat := float64(rightVal)
+		return &object.Integer{Value: int64(math.Pow(leftFloat, rightFloat))}
 	case "<":
 		return toBooleanObject(leftVal < rightVal)
 	case ">":
