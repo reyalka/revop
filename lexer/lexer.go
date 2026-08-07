@@ -30,7 +30,7 @@ func (l *Lexer) readChar() {
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
-	l.skipWhiteSpace()
+	l.skipIgnored()
 
 	switch l.ch {
 	case '=':
@@ -144,6 +144,26 @@ func (l *Lexer) readString() string {
 func (l *Lexer) skipWhiteSpace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
 		l.readChar()
+	}
+}
+
+func (l *Lexer) skipComment() {
+	if l.ch == '/' && l.peekChar() == '/' {
+		for l.ch != '\n' && l.ch != 0 {
+			l.readChar()
+		}
+	}
+
+}
+
+func (l *Lexer) skipIgnored() {
+	for {
+		l.skipWhiteSpace()
+		if l.ch == '/' && l.peekChar() == '/' {
+			l.skipComment()
+			continue
+		}
+		break
 	}
 }
 

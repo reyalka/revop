@@ -32,7 +32,8 @@ func TestNextToken(t *testing.T) {
 	[1, 2, "foo"];
 	#{"foo": "bar"};
 	let mut a = 5;
-	x |> f;
+	x |> f; // comment
+	// comment
 	`
 
 	tests := []struct {
