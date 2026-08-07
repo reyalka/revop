@@ -518,7 +518,7 @@ func (p *Parser) expectPeek(t token.Type) bool {
 }
 
 func (p *Parser) noPrefixParserFnError(t token.Type) {
-	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+	msg := fmt.Sprintf("unexpected token `%s` found", t)
 	p.errors = append(p.errors, msg)
 }
 
