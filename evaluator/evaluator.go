@@ -41,7 +41,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		if ok {
 			return evaluated
 		}
-		
+
 		right := Eval(node.Right, env)
 		if isError(right) {
 			return right
@@ -321,17 +321,39 @@ func evalExpressions(exprs []ast.Expression, env *object.Environment) []object.O
 func evalIndexExpression(left, index object.Object) object.Object {
 	switch {
 	case left.Type() == object.ARRAY && index.Type() == object.INTEGER:
-		array := left.(*object.Array)
-		idx := index.(*object.Integer).Value
-
-		if idx < 0 || idx >= int64(len(array.Elements)) {
-			return object.NewError("index out of range")
-		}
-
-		return array.Elements[idx]
+		return evalArrayIndexExpression(left, index)
+	case left.Type() == object.HASHMAP:
+		return evalHashMapIndexExpression(left, index)
 	default:
 		return object.NewError("index operator not supported: %s[%s]", left.Type(), index.Type())
 	}
+}
+
+func evalArrayIndexExpression(array, index object.Object) object.Object {
+	arrayObject := array.(*object.Array)
+	idx := index.(*object.Integer).Value
+
+	if idx < 0 || idx >= int64(len(arrayObject.Elements)) {
+		return object.NewError("index out of range")
+	}
+
+	return arrayObject.Elements[idx]
+}
+
+func evalHashMapIndexExpression(hashMap, index object.Object) object.Object {
+	hashMapObject := hashMap.(*object.HashMap)
+
+	key, ok := index.(object.Hashable)
+	if !ok {
+		return object.NewError("cannot use as hash key: %s", index.Type())
+	}
+
+	pair, ok := hashMapObject.Pairs[key.HashKey()]
+	if !ok {
+		return NULL
+	}
+
+	return pair.Value
 }
 
 func evalHashMapLiteral(node *ast.HashMapLiteral, env *object.Environment) object.Object {
