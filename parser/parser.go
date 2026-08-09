@@ -351,8 +351,14 @@ func (p *Parser) parseBlockExpression() ast.Expression {
 }
 
 func (p *Parser) parseBlock() *ast.Block {
+	return p.parseBlockFrom(p.curToken)
+}
+
+// parseBlockFrom は現在のトークンの次から `}` までを本体として読み、
+// tok をブロックのトークンとして持つ Block を返す
+func (p *Parser) parseBlockFrom(tok token.Token) *ast.Block {
 	block := &ast.Block{
-		Token: p.curToken,
+		Token: tok,
 	}
 	block.Statements = []ast.Statement{}
 
@@ -372,6 +378,12 @@ func (p *Parser) parseBlock() *ast.Block {
 func (p *Parser) parseFunctionLiteral() ast.Expression {
 	lit := &ast.FunctionLiteral{Token: p.curToken}
 
+	// fn { x in x + 1; } のブレース記法
+	if p.peekTokenIs(token.LBRACE) {
+		p.nextToken()
+		return p.parseBraceFunctionLiteral(lit)
+	}
+
 	if !p.expectPeek(token.LPAREN) {
 		return nil
 	}
@@ -385,6 +397,68 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	lit.Body = p.parseBlock()
 
 	return lit
+}
+
+// parseBraceFunctionLiteral は curToken が `{` の状態から
+// `{ [params in] statements }` を関数リテラルとして読む
+func (p *Parser) parseBraceFunctionLiteral(lit *ast.FunctionLiteral) ast.Expression {
+	lbrace := p.curToken
+
+	params, ok := p.parseBraceFunctionParameters()
+	if !ok {
+		params = []*ast.Identifier{}
+	}
+	lit.Parameters = params
+
+	lit.Body = p.parseBlockFrom(lbrace)
+
+	if !p.curTokenIs(token.RBRACE) {
+		p.errors = append(p.errors, "expected next token to be }, got EOF instead")
+		return nil
+	}
+
+	return lit
+}
+
+// parseBraceFunctionParameters は curToken が `{` または `,` の状態から
+// `IDENT (, IDENT)* in` の並びを先読みし、あればそれを仮引数として読む。
+// 引数部が無ければトークン位置を元に戻して false を返す。
+func (p *Parser) parseBraceFunctionParameters() ([]*ast.Identifier, bool) {
+	if !p.peekTokenIs(token.IDENT) {
+		return nil, false
+	}
+
+	savedLexer := *p.l
+	savedCur := p.curToken
+	savedPeek := p.peekToken
+	restore := func() {
+		*p.l = savedLexer
+		p.curToken = savedCur
+		p.peekToken = savedPeek
+	}
+
+	idents := []*ast.Identifier{}
+	for {
+		if !p.peekTokenIs(token.IDENT) {
+			restore()
+			return nil, false
+		}
+		p.nextToken()
+		idents = append(idents, &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal})
+
+		if !p.peekTokenIs(token.COMMA) {
+			break
+		}
+		p.nextToken()
+	}
+
+	if !p.peekTokenIs(token.IN) {
+		restore()
+		return nil, false
+	}
+	p.nextToken()
+
+	return idents, true
 }
 
 func (p *Parser) parseFunctionParameters() []*ast.Identifier {

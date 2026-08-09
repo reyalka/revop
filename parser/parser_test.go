@@ -768,6 +768,109 @@ func TestFunctionParameterParsing(t *testing.T) {
 	}
 }
 
+func TestBraceFunctionLiteralParsing(t *testing.T) {
+	tests := []struct {
+		input          string
+		expectedParams []string
+		expectedStmts  int
+	}{
+		{input: `func { x; }`, expectedParams: []string{}, expectedStmts: 1},
+		{input: `func {}`, expectedParams: []string{}, expectedStmts: 0},
+		{input: `func { arg in arg; arg + 1; return arg; }`, expectedParams: []string{"arg"}, expectedStmts: 3},
+		{input: `func { arg, other in arg + other; }`, expectedParams: []string{"arg", "other"}, expectedStmts: 1},
+		{input: `func { a, b, c in a; }`, expectedParams: []string{"a", "b", "c"}, expectedStmts: 1},
+		{input: `func     {  x  in  x;  }`, expectedParams: []string{"x"}, expectedStmts: 1},
+		{input: `fn { x in x; }`, expectedParams: []string{"x"}, expectedStmts: 1},
+		// `in` が無い場合、識別子は引数ではなく式文として扱う
+		{input: `func { arg; }`, expectedParams: []string{}, expectedStmts: 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+			checkParserErrors(t, p)
+
+			if len(program.Statements) != 1 {
+				t.Fatalf("program.Statements does not contain 1 statement. got=%d",
+					len(program.Statements))
+			}
+
+			stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+			if !ok {
+				t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+					program.Statements[0])
+			}
+
+			function, ok := stmt.Expression.(*ast.FunctionLiteral)
+			if !ok {
+				t.Fatalf("stmt.Expression is not ast.FunctionLiteral. got=%T", stmt.Expression)
+			}
+
+			if len(function.Parameters) != len(tt.expectedParams) {
+				t.Fatalf("length parameters wrong. want %d, got=%d",
+					len(tt.expectedParams), len(function.Parameters))
+			}
+
+			for i, ident := range tt.expectedParams {
+				testLiteralExpression(t, function.Parameters[i], ident)
+			}
+
+			if len(function.Body.Statements) != tt.expectedStmts {
+				t.Fatalf("function.Body.Statements has not %d statements. got=%d",
+					tt.expectedStmts, len(function.Body.Statements))
+			}
+		})
+	}
+}
+
+func TestBraceFunctionLiteralWithPipe(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"x |> func { a in a + 1; }", "<func(a) { (a + 1); }>(x)"},
+		{"x |> func { 1; }", "<func() { 1; }>(x)"},
+		{"func { a in a; } |> g", "<g>(func(a) { a; })"},
+		{"x |> func { a in a |> g; }", "<func(a) { <g>(a); }>(x)"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+			checkParserErrors(t, p)
+
+			if program.String() != tt.expected {
+				t.Errorf("expected=%q, got=%q", tt.expected, program.String())
+			}
+		})
+	}
+}
+
+func TestBraceFunctionLiteralErrors(t *testing.T) {
+	tests := []string{
+		`func { a in a;`,
+		`func { 1 in a; }`,
+		`func { a, 1 in a; }`,
+		`func { a, b; }`,
+	}
+
+	for _, input := range tests {
+		t.Run(input, func(t *testing.T) {
+			l := lexer.New(input)
+			p := New(l)
+			p.ParseProgram()
+
+			if len(p.Errors()) == 0 {
+				t.Fatalf("expected parser errors for %q, got none", input)
+			}
+		})
+	}
+}
+
 func TestCallExpressionParsing(t *testing.T) {
 	input := "add(1, 2 * 3, 4 + 5);"
 
