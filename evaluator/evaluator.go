@@ -396,6 +396,10 @@ func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) o
 		return value
 	}
 
+	if identifier.Object.Type() != value.Type() {
+		return object.NewError("type mismatch: cannot assign %s to %s", value.Type(), identifier.Object.Type())
+	}
+
 	env.Set(ident, object.Mutability{Object: value, Mutable: true})
 	return value
 }

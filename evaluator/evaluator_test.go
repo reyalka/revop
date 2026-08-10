@@ -278,6 +278,7 @@ func TestAssign(t *testing.T) {
 		{"let mut a = 5; let mut b = a; b = 10; b;", 10},
 		{"a = 5;", "cannot assign to undefined variable: a"},
 		{"let mut a = 5; let b = a; b = 10;", "cannot assign to immutable variable: b"},
+		{`let mut a = 5; a = "Hello"; a;`, "type mismatch: cannot assign STRING to INTEGER"},
 	}
 
 	for _, tt := range tests {
