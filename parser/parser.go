@@ -12,23 +12,23 @@ import (
 const (
 	_ int = iota * 10
 	LOWEST
-	ASSIGN      // a = 5
-	PIPE        // x |> f
-	LOGICAL_OR  // ||
-	LOGICAL_AND // &&
-	EQUALS      // == !=
-	LESSGRATER  // < >
-	SUM         // + -
-	PRODUCT     // * /
-	POW         // ^
-	PREFIX      // -X
-	CALL        // call(X)
-	INDEX       // array[index]
+	ASSIGN     // a = 5
+	PIPE       // x |> f
+	LOGICALOR  // ||
+	LOGICALAND // &&
+	EQUALS     // == !=
+	LESSGRATER // < >
+	SUM        // + -
+	PRODUCT    // * /
+	POW        // ^
+	PREFIX     // -X
+	CALL       // call(X)
+	INDEX      // array[index]
 )
 
 var precedences = map[token.Type]int{
 	token.EQ:       EQUALS,
-	token.NOT_EQ:   EQUALS,
+	token.NE:       EQUALS,
 	token.LT:       LESSGRATER,
 	token.GT:       LESSGRATER,
 	token.LE:       LESSGRATER,
@@ -41,8 +41,8 @@ var precedences = map[token.Type]int{
 	token.LPAREN:   CALL,
 	token.LBRACKET: INDEX,
 	token.ASSIGN:   ASSIGN,
-	token.AND:      LOGICAL_AND,
-	token.OR:       LOGICAL_OR,
+	token.AND:      LOGICALAND,
+	token.OR:       LOGICALOR,
 	token.PIPE:     PIPE,
 }
 
@@ -91,7 +91,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.SLASH, p.parseInfixExpression)
 	p.registerInfix(token.POW, p.parseInfixExpression)
 	p.registerInfix(token.EQ, p.parseInfixExpression)
-	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
+	p.registerInfix(token.NE, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LE, p.parseInfixExpression)
@@ -270,7 +270,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	precedence := p.curPrecedence()
 	p.nextToken()
 	if expr.Operator == "^" {
-		precedence -= 1
+		precedence--
 	}
 	expr.Right = p.parseExpression(precedence)
 
@@ -472,7 +472,7 @@ func desugarFunctionCapturing(callExpr *ast.CallExpression) ast.Expression {
 				Token: callExpr.Token,
 				Value: fmt.Sprintf("$arg%d", argIndex),
 			}
-			argIndex += 1
+			argIndex++
 			placeholders = append(placeholders, &ident)
 			innerParams = append(innerParams, &ident)
 		} else {

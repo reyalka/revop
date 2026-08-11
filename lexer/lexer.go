@@ -24,7 +24,7 @@ func (l *Lexer) readChar() {
 		l.ch = l.input[l.readPosition]
 	}
 	l.position = l.readPosition
-	l.readPosition += 1
+	l.readPosition++
 }
 
 func (l *Lexer) NextToken() token.Token {
@@ -59,7 +59,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.New(token.PLACEHOLDER, l.ch)
 	case '!':
 		if l.peekChar() == '=' {
-			tok = l.makeTwoCharToken(token.NOT_EQ)
+			tok = l.makeTwoCharToken(token.NE)
 		} else {
 			tok = token.New(token.BANG, l.ch)
 		}
@@ -114,9 +114,8 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = l.readWhile(isDigit)
 			tok.Type = token.INT
 			return tok
-		} else {
-			tok = token.New(token.ILLEGAL, l.ch)
 		}
+		tok = token.New(token.ILLEGAL, l.ch)
 	}
 
 	l.readChar()

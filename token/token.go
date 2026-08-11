@@ -28,7 +28,7 @@ const (
 	LE       Type = "<="
 	GE       Type = ">="
 	EQ       Type = "=="
-	NOT_EQ   Type = "!="
+	NE       Type = "!="
 	AND      Type = "&&"
 	OR       Type = "||"
 
