@@ -416,8 +416,85 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 
 func (p *Parser) parseCallExpression(fn ast.Expression /* 関数識別子は式 */) ast.Expression {
 	expr := &ast.CallExpression{Token: p.curToken, Function: fn}
-	expr.Arguments = p.parseExpressionList(token.RPAREN)
-	return expr
+
+	list := []ast.Expression{}
+	var isFunctionCapturing bool
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		expr.Arguments = list
+		return expr
+	}
+
+	p.nextToken()
+
+	if p.curTokenIs(token.PLACEHOLDER) {
+		list = append(list, &ast.Placeholder{Token: p.curToken})
+		isFunctionCapturing = true
+	} else {
+		list = append(list, p.parseExpression(LOWEST))
+	}
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		if p.curTokenIs(token.PLACEHOLDER) {
+			list = append(list, &ast.Placeholder{Token: p.curToken})
+			isFunctionCapturing = true
+		} else {
+			list = append(list, p.parseExpression(LOWEST))
+		}
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	expr.Arguments = list
+	if isFunctionCapturing {
+		return desugarFunctionCapturing(expr)
+	} else {
+		return expr
+	}
+}
+
+func desugarFunctionCapturing(callExpr *ast.CallExpression) ast.Expression {
+	outerFn := &ast.FunctionLiteral{Token: token.Token{Type: token.FUNCTION, Literal: "fn"}}
+	innerCall := &ast.CallExpression{Token: callExpr.Token}
+
+	placeholders := []*ast.Identifier{}
+	argIndex := 0
+	innerParams := []ast.Expression{}
+
+	for _, param := range callExpr.Arguments {
+		if _, ok := param.(*ast.Placeholder); ok {
+			ident := ast.Identifier{
+				Token: callExpr.Token,
+				Value: fmt.Sprintf("$arg%d", argIndex),
+			}
+			argIndex += 1
+			placeholders = append(placeholders, &ident)
+			innerParams = append(innerParams, &ident)
+		} else {
+			innerParams = append(innerParams, param)
+		}
+	}
+
+	innerCall.Function = callExpr.Function
+	innerCall.Arguments = innerParams
+
+	outerFn.Parameters = placeholders
+	outerFn.Body = &ast.Block{
+		Token: callExpr.Token,
+		Statements: []ast.Statement{
+			&ast.ExpressionStatement{
+				Token:      callExpr.Token,
+				Expression: innerCall,
+			},
+		},
+	}
+
+	return outerFn
 }
 
 func (p *Parser) parseStringLiteral() ast.Expression {
@@ -426,14 +503,14 @@ func (p *Parser) parseStringLiteral() ast.Expression {
 
 func (p *Parser) parseArrayLiteral() ast.Expression {
 	array := &ast.ArrayLiteral{Token: p.curToken}
-	array.Elements = p.parseExpressionList(token.RBRACKET)
+	array.Elements = p.parseArrayElements()
 	return array
 }
 
-func (p *Parser) parseExpressionList(end token.Type) []ast.Expression {
+func (p *Parser) parseArrayElements() []ast.Expression {
 	list := []ast.Expression{}
 
-	if p.peekTokenIs(end) {
+	if p.peekTokenIs(token.RBRACKET) {
 		p.nextToken()
 		return list
 	}
@@ -444,14 +521,14 @@ func (p *Parser) parseExpressionList(end token.Type) []ast.Expression {
 	list = append(list, p.parseExpression(LOWEST))
 
 	for p.peekTokenIs(token.COMMA) {
-		// <IDENT> <COMMA> <IDENT> -> nextを2回
+		// <EXPRESSION> <COMMA> <EXPRESSION> -> nextを2回
 		// ^cur	   ^peek
 		p.nextToken()
 		p.nextToken()
 		list = append(list, p.parseExpression(LOWEST))
 	}
 
-	if !p.expectPeek(end) {
+	if !p.expectPeek(token.RBRACKET) {
 		return nil
 	}
 

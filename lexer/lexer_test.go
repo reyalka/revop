@@ -35,6 +35,7 @@ func TestNextToken(t *testing.T) {
 	let mut a = 5;
 	x |> f; // comment
 	// comment
+	add(3, _);
 	`
 
 	tests := []struct {
@@ -155,6 +156,13 @@ func TestNextToken(t *testing.T) {
 		{token.IDENT, "x"},
 		{token.PIPE, "|>"},
 		{token.IDENT, "f"},
+		{token.SEMICOLON, ";"},
+		{token.IDENT, "add"},
+		{token.LPAREN, "("},
+		{token.INT, "3"},
+		{token.COMMA, ","},
+		{token.PLACEHOLDER, "_"},
+		{token.RPAREN, ")"},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}

@@ -263,8 +263,7 @@ func (fl *FunctionLiteral) String() string {
 		params = append(params, p.String())
 	}
 
-	out.WriteString(fl.TokenLiteral())
-	out.WriteString("(")
+	out.WriteString("fn(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(") ")
 	out.WriteString(fl.Body.String())
@@ -292,6 +291,7 @@ func (ce *CallExpression) String() string {
 	out.WriteString("<")
 	out.WriteString(ce.Function.String())
 	out.WriteString(">(")
+
 	out.WriteString(strings.Join(args, ", "))
 	out.WriteString(")")
 
@@ -374,3 +374,12 @@ func (hm *HashMapLiteral) String() string {
 
 	return out.String()
 }
+
+type Placeholder struct {
+	Token token.Token
+}
+
+// implement `Expression` and `Node` interface
+func (p *Placeholder) expressionNode()      {}
+func (p *Placeholder) TokenLiteral() string { return p.Token.Literal }
+func (p *Placeholder) String() string       { return p.Token.Literal }

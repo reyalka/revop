@@ -55,6 +55,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = token.New(token.PLUS, l.ch)
 	case '-':
 		tok = token.New(token.MINUS, l.ch)
+	case '_':
+		tok = token.New(token.PLACEHOLDER, l.ch)
 	case '!':
 		if l.peekChar() == '=' {
 			tok = l.makeTwoCharToken(token.NOT_EQ)

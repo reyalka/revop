@@ -1133,6 +1133,42 @@ func TestParsingPipeOperators(t *testing.T) {
 	}
 }
 
+func TestFunctionCapture(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			`add(3, _)`,
+			`fn($arg0) { <add>(3, $arg0); }`,
+		},
+		{
+			`add(_, 3)`,
+			`fn($arg0) { <add>($arg0, 3); }`,
+		},
+		{
+			`add(_, _)`,
+			`fn($arg0, $arg1) { <add>($arg0, $arg1); }`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			l := lexer.New(tt.input)
+			p := New(l)
+			program := p.ParseProgram()
+			checkParserErrors(t, p)
+
+			stmt := program.Statements[0].(*ast.ExpressionStatement)
+			expression := stmt.Expression
+
+			if expression.String() != tt.expected {
+				t.Errorf("Expected %s, got %s", tt.expected, expression.String())
+			}
+		})
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
