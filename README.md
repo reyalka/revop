@@ -1,7 +1,7 @@
 # Revop Language
 『Go言語でつくるインタプリタ』を参考に、いくつかの拡張を施した自作言語
 
-LL(1)のトップダウン解析とPratt解析で作ったinterpreterです。
+LL(1)解析とPratt解析で作った手書きinterpreterです。
 
 # QuickStart
 ```
