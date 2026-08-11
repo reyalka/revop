@@ -60,3 +60,6 @@ echo(map[42]); // answer
 echo(len(arr)); // 5
 echo(len(map)); // 3
 echo(len("revop")); // 5
+
+// for
+for([1, 2, 3], fn(x) { echo(x) }) // 1\n2\n3

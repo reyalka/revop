@@ -409,7 +409,7 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 	case *object.Function:
 		return executeFunction(fn, args...)
 	case *object.Builtin:
-		return fn.Run(args...)
+		return fn.Execute(args...)
 	default:
 		return object.NewError("not a function: %s", fn.Type())
 	}

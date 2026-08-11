@@ -34,6 +34,10 @@ type Hashable interface {
 	HashKey() HashKey
 }
 
+type Excutable interface {
+	Execute(args ...Object) Object
+}
+
 type Integer struct {
 	Value int64
 }
@@ -112,7 +116,7 @@ type Builtin struct {
 
 func (b *Builtin) Type() Type      { return BUILTIN }
 func (b *Builtin) Inspect() string { return "builtin function" }
-func (b *Builtin) Run(args ...Object) Object {
+func (b *Builtin) Execute(args ...Object) Object {
 	if b.Args != -1 && int64(len(args)) != b.Args {
 		return NewError("wrong number of arguments. got=%d, want=%d", len(args), b.Args)
 	}
