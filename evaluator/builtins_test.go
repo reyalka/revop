@@ -286,7 +286,7 @@ func TestForBuiltin(t *testing.T) {
 		{"for([1, 2, 3], 1)", "second argument to `for` must be FUNCTION, got INTEGER"},
 		{"let mut x = 0; for([1, 2, 3], fn(y) { x = x + y }); x", 6},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
 			evaluated := testEval(tt.input)
