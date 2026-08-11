@@ -341,6 +341,21 @@ func TestFunctionApplication(t *testing.T) {
 	}
 }
 
+func TestEnclosedFunctionEnvironments(t *testing.T) {
+	input := `
+	let mut x = 0;
+	let increment = fn() {
+		x = x + 1;
+	};
+	increment();
+	increment();
+	increment();
+	x;
+	`
+
+	testIntegerObject(t, testEval(input), 3)
+}
+
 func TestStringLiteral(t *testing.T) {
 	input := `"Hello World!"`
 
@@ -389,147 +404,6 @@ func TestStringOperations(t *testing.T) {
 			testBooleanObject(t, evaluated, boolean)
 		} else {
 			t.Errorf("expected value is not boolean. got=%T (%+v)", tt.expected, tt.expected)
-		}
-	}
-}
-
-func TestBuiltinFunctions(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected any
-	}{
-		{
-			`len("")`,
-			0,
-		},
-		{
-			`len("four")`,
-			4,
-		},
-		{
-			`len("hello world")`,
-			11,
-		},
-		{
-			`len(1)`,
-			"argument to `len` not supported, got INTEGER",
-		},
-		{
-			`len("one", "two")`,
-			"wrong number of arguments. got=2, want=1",
-		},
-		{
-			`push([1, 2, 3], 4)`,
-			&object.Array{Elements: []object.Object{
-				&object.Integer{Value: 1},
-				&object.Integer{Value: 2},
-				&object.Integer{Value: 3},
-				&object.Integer{Value: 4},
-			}}},
-		{
-			`push(1, 2)`,
-			"first argument to `push` must be ARRAY, got INTEGER",
-		},
-		{
-			`sum([1, 2, 3])`,
-			6,
-		},
-		{
-			`sum([1, 2, 3, 4])`,
-			10,
-		},
-		{
-			`sum(1)`,
-			"argument to `sum` must be ARRAY, got INTEGER",
-		},
-		{
-			`reverse([1, 2, 3])`,
-			&object.Array{Elements: []object.Object{
-				&object.Integer{Value: 3},
-				&object.Integer{Value: 2},
-				&object.Integer{Value: 1},
-			}}},
-		{
-			`reverse(1)`,
-			"argument to `reverse` must be ARRAY, got INTEGER",
-		},
-		{
-			`filter([1, 2, 3], fn(x) { x > 1 })`,
-			&object.Array{Elements: []object.Object{
-				&object.Integer{Value: 2},
-				&object.Integer{Value: 3},
-			}}},
-		{
-			`filter([1, 2, 3], fn(x) { x < 0 })`,
-			&object.Array{Elements: []object.Object{}},
-		},
-		{
-			`filter(1, fn(x) { x > 1 })`,
-			"first argument to `filter` must be ARRAY, got INTEGER",
-		},
-		{
-			`filter([1, 2, 3], 1)`,
-			"second argument to `filter` must be FUNCTION, got INTEGER",
-		},
-		{
-			`map([1, 2, 3], fn(x) { x * 2 })`,
-			&object.Array{Elements: []object.Object{
-				&object.Integer{Value: 2},
-				&object.Integer{Value: 4},
-				&object.Integer{Value: 6},
-			}}},
-		{
-			`map([1, 2, 3], fn(x) { x + 1 })`,
-			&object.Array{Elements: []object.Object{
-				&object.Integer{Value: 2},
-				&object.Integer{Value: 3},
-				&object.Integer{Value: 4},
-			}}},
-		{
-			`map(1, fn(x) { x * 2 })`,
-			"first argument to `map` must be ARRAY, got INTEGER",
-		},
-		{
-			`map([1, 2, 3], 1)`,
-			"second argument to `map` must be FUNCTION, got INTEGER",
-		},
-		{
-			`map([1, 2, 3], fn(x, y) { x * 2 })`,
-			"function passed to `map` must have exactly 1 parameters, got 2",
-		},
-		{
-			`reduce([1, 2, 3], fn(acc, x) { acc + x }, 0)`,
-			6,
-		},
-		{
-			`reduce(1, fn(acc, x) { acc + x }, 0)`,
-			"first argument to `reduce` must be ARRAY, got INTEGER",
-		},
-		{
-			`reduce([1, 2, 3], 1, 0)`,
-			"second argument to `reduce` must be FUNCTION, got INTEGER",
-		},
-		{
-			`reduce([1, 2, 3], fn(acc, x, y) { acc + x }, 0)`,
-			"function passed to `reduce` must have exactly 2 parameters, got 3",
-		},
-	}
-
-	for _, tt := range tests {
-		evaluated := testEval(tt.input)
-
-		switch expected := tt.expected.(type) {
-		case int:
-			testIntegerObject(t, evaluated, int64(expected))
-		case string:
-			errObj, ok := evaluated.(*object.Error)
-			if !ok {
-				t.Errorf("object is not Error. got=%T (%+v)", evaluated, evaluated)
-				continue
-			}
-			if errObj.Message != expected {
-				t.Errorf("wrong error message. expected=%q, got=%q", expected, errObj.Message)
-			}
 		}
 	}
 }

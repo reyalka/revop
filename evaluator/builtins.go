@@ -62,10 +62,7 @@ func init() {
 
 				newElements := make([]object.Object, len(arr.Elements))
 				for i, elem := range arr.Elements {
-					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, object.Mutability{Object: elem, Mutable: false})
-
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := executeFunction(fn, elem)
 					if isError(evaluated) {
 						return evaluated
 					}
@@ -94,10 +91,7 @@ func init() {
 
 				var newElements []object.Object
 				for _, elem := range arr.Elements {
-					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, object.Mutability{Object: elem, Mutable: false})
-
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := executeFunction(fn, elem)
 					if isError(evaluated) {
 						return evaluated
 					}
@@ -133,11 +127,7 @@ func init() {
 				}
 
 				for _, elem := range arr.Elements {
-					extendedEnv := object.NewEnclosedEnvironment(fn.Env)
-					extendedEnv.Set(fn.Parameters[0].Value, object.Mutability{Object: accumulator, Mutable: false})
-					extendedEnv.Set(fn.Parameters[1].Value, object.Mutability{Object: elem, Mutable: false})
-
-					evaluated := Eval(fn.Body, extendedEnv)
+					evaluated := executeFunction(fn, accumulator, elem)
 					if isError(evaluated) {
 						return evaluated
 					}
@@ -216,6 +206,67 @@ func init() {
 				}
 				result := strings.Join(inspected, ", ")
 				fmt.Println(result)
+
+				return NULL
+			},
+		},
+		"while": {
+			Args: 2,
+			Fn: func(args ...object.Object) object.Object {
+				if args[0].Type() != object.FUNCTION {
+					return object.NewError("first argument to `while` must be FUNCTION, got %s", args[0].Type())
+				}
+				if args[1].Type() != object.FUNCTION {
+					return object.NewError("second argument to `while` must be FUNCTION, got %s", args[1].Type())
+				}
+
+				conditionFn := args[0].(*object.Function)
+				bodyFn := args[1].(*object.Function)
+
+				for {
+					condition := executeFunction(conditionFn)
+					if isError(condition) {
+						return condition
+					}
+					if condition.Type() != object.BOOLEAN {
+						return object.NewError("condition for `while` must return BOOLEAN, got %s", condition.Type())
+					}
+					if condition == FALSE {
+						break
+					}
+
+					body := executeFunction(bodyFn)
+					if isError(body) {
+						return body
+					}
+				}
+
+				return NULL
+			},
+		},
+		"for": {
+			Args: 2,
+			Fn: func(args ...object.Object) object.Object {
+				if args[0].Type() != object.ARRAY {
+					return object.NewError("first argument to `for` must be ARRAY, got %s", args[0].Type())
+				}
+				if args[1].Type() != object.FUNCTION {
+					return object.NewError("second argument to `for` must be FUNCTION, got %s", args[1].Type())
+				}
+
+				arr := args[0].(*object.Array)
+				fn := args[1].(*object.Function)
+
+				if len(fn.Parameters) != 1 {
+					return object.NewError("function passed to `for` must have exactly 1 parameter, got %d", len(fn.Parameters))
+				}
+
+				for _, elem := range arr.Elements {
+					evaluated := executeFunction(fn, elem)
+					if isError(evaluated) {
+						return evaluated
+					}
+				}
 
 				return NULL
 			},

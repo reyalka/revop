@@ -383,7 +383,7 @@ func evalHashMapLiteral(node *ast.HashMapLiteral, env *object.Environment) objec
 
 func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) object.Object {
 	ident := node.Name.Value
-	identifier, ok := env.Get(ident)
+	identifier, assignEnv, ok := env.GetWithEnv(ident)
 	if !ok {
 		return object.NewError("cannot assign to undefined variable: %s", ident)
 	}
@@ -400,22 +400,26 @@ func evalAssignExpression(node *ast.AssignExpression, env *object.Environment) o
 		return object.NewError("type mismatch: cannot assign %s to %s", value.Type(), identifier.Object.Type())
 	}
 
-	env.Set(ident, object.Mutability{Object: value, Mutable: true})
+	assignEnv.Assign(ident, object.Mutability{Object: value, Mutable: true})
 	return value
 }
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
 	switch fn := fn.(type) {
 	case *object.Function:
-		extendedEnv := extendedFunctionEnv(fn, args)
-		evaluated := Eval(fn.Body, extendedEnv)
-		return unwrapReturnValue(evaluated)
+		return executeFunction(fn, args...)
 	case *object.Builtin:
 		return fn.Run(args...)
 	default:
 		return object.NewError("not a function: %s", fn.Type())
 	}
 
+}
+
+func executeFunction(fn *object.Function, args ...object.Object) object.Object {
+	extendedEnv := extendedFunctionEnv(fn, args)
+	evaluated := Eval(fn.Body, extendedEnv)
+	return unwrapReturnValue(evaluated)
 }
 
 func extendedFunctionEnv(fn *object.Function, args []object.Object) *object.Environment {
