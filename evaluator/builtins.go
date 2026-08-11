@@ -49,7 +49,7 @@ func init() {
 				if args[0].Type() != object.ARRAY {
 					return object.NewError("first argument to `map` must be ARRAY, got %s", args[0].Type())
 				}
-				if args[1].Type() != object.FUNCTION {
+				if !isFunction(args[1]) {
 					return object.NewError("second argument to `map` must be FUNCTION, got %s", args[1].Type())
 				}
 
@@ -78,7 +78,7 @@ func init() {
 				if args[0].Type() != object.ARRAY {
 					return object.NewError("first argument to `filter` must be ARRAY, got %s", args[0].Type())
 				}
-				if args[1].Type() != object.FUNCTION {
+				if !isFunction(args[1]) {
 					return object.NewError("second argument to `filter` must be FUNCTION, got %s", args[1].Type())
 				}
 
@@ -114,7 +114,7 @@ func init() {
 				if args[0].Type() != object.ARRAY {
 					return object.NewError("first argument to `reduce` must be ARRAY, got %s", args[0].Type())
 				}
-				if args[1].Type() != object.FUNCTION {
+				if !isFunction(args[1]) {
 					return object.NewError("second argument to `reduce` must be FUNCTION, got %s", args[1].Type())
 				}
 
@@ -213,10 +213,10 @@ func init() {
 		"while": {
 			Args: 2,
 			Fn: func(args ...object.Object) object.Object {
-				if args[0].Type() != object.FUNCTION {
+				if !isFunction(args[0]) {
 					return object.NewError("first argument to `while` must be FUNCTION, got %s", args[0].Type())
 				}
-				if args[1].Type() != object.FUNCTION {
+				if !isFunction(args[1]) {
 					return object.NewError("second argument to `while` must be FUNCTION, got %s", args[1].Type())
 				}
 
@@ -250,7 +250,7 @@ func init() {
 				if args[0].Type() != object.ARRAY {
 					return object.NewError("first argument to `for` must be ARRAY, got %s", args[0].Type())
 				}
-				if args[1].Type() != object.FUNCTION {
+				if !isFunction(args[1]) {
 					return object.NewError("second argument to `for` must be FUNCTION, got %s", args[1].Type())
 				}
 
@@ -272,4 +272,8 @@ func init() {
 			},
 		},
 	}
+}
+
+func isFunction(obj object.Object) bool {
+	return obj.Type() == object.FUNCTION || obj.Type() == object.BUILTIN
 }
