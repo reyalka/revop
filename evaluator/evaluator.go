@@ -18,6 +18,9 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.Program:
 		return evalProgram(node, env)
 	case *ast.ExpressionStatement:
+		if ie, ok := node.Expression.(*ast.IfExpression); ok {
+			return evalIfExpression(ie, env, false)
+		}
 		return Eval(node.Expression, env)
 	case *ast.Identifier:
 		return evalIdentifier(node, env)
@@ -52,7 +55,7 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 	case *ast.Block:
 		return evalBlockStatement(node, env)
 	case *ast.IfExpression:
-		return evalIfExpression(node, env)
+		return evalIfExpression(node, env, true)
 	case *ast.ReturnStatement:
 		val := Eval(node.ReturnValue, env)
 		if isError(val) {
@@ -272,14 +275,14 @@ func evalStringInfixExpression(op string, left, right object.Object) object.Obje
 	}
 }
 
-func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Object {
+func evalIfExpression(ie *ast.IfExpression, env *object.Environment, asExpression bool) object.Object {
 	cond := Eval(ie.Condition, env)
 	if isError(cond) {
 		return cond
 	}
 
 	if cond.Type() != object.BOOLEAN {
-		return NULL
+		return object.NewError("condition for `if` must return BOOLEAN, got %s", cond.Type())
 	}
 
 	if cond == TRUE {
@@ -293,7 +296,7 @@ func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Obje
 		}
 
 		if cond.Type() != object.BOOLEAN {
-			return NULL
+			return object.NewError("condition for `if` must return BOOLEAN, got %s", cond.Type())
 		}
 
 		if cond == TRUE {
@@ -303,6 +306,10 @@ func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Obje
 
 	if ie.Alternative != nil {
 		return Eval(ie.Alternative, env)
+	}
+
+	if asExpression {
+		return object.NewError("no else branch for if expression")
 	}
 
 	return NULL
