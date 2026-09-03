@@ -119,6 +119,37 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+func TestElseIfEvaluation(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected any
+	}{
+		{"if (true) { 10 } else if (true) { 20 } else { 30 }", 10},
+		{"if (false) { 10 } else if (true) { 20 } else { 30 }", 20},
+		{"if (false) { 10 } else if (false) { 20 } else { 30 }", 30},
+		{"if (false) { 10 } else if (false) { 20 }", nil},
+		{"if (false) { 10 } else if (true) { 20 }", 20},
+		{"if (1 < 2) { 10 } else if (2 < 3) { 20 } else { 30 }", 10},
+		{"if (1 > 2) { 10 } else if (2 < 3) { 20 } else { 30 }", 20},
+		{"if (1 > 2) { 10 } else if (2 > 3) { 20 } else { 30 }", 30},
+		{"if (1 > 2) { 10 } else if (2 > 3) { 20 } else if (3 < 4) { 30 } else { 40 }", 30},
+		{"if (1 > 2) { 10 } else if (2 > 3) { 20 } else if (3 > 4) { 30 } else { 40 }", 40},
+		{"if (1 > 2) { 10 } else if (2 > 3) { 20 } else if (3 > 4) { 30 }", nil},
+		{"let x = if (false) { 10 } else if (true) { 20 } else { 30 }; x", 20},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		integer, ok := tt.expected.(int)
+		if ok {
+			testIntegerObject(t, evaluated, int64(integer))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
+}
+
 func TestReturnStatements(t *testing.T) {
 	tests := []struct {
 		input    string

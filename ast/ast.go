@@ -197,10 +197,17 @@ func (b *Boolean) expressionNode()      {}
 func (b *Boolean) TokenLiteral() string { return b.Token.Literal }
 func (b *Boolean) String() string       { return b.Token.Literal }
 
+type ElseIfBranch struct {
+	Token       token.Token // 'if' token of the `else if`
+	Condition   Expression
+	Consequence *Block
+}
+
 type IfExpression struct {
 	Token       token.Token
 	Condition   Expression
 	Consequence *Block
+	ElseIfs     []*ElseIfBranch
 	Alternative *Block
 }
 
@@ -214,6 +221,13 @@ func (ie *IfExpression) String() string {
 	out.WriteString(ie.Condition.String())
 	out.WriteString(") ")
 	out.WriteString(ie.Consequence.String())
+
+	for _, ei := range ie.ElseIfs {
+		out.WriteString("else if (")
+		out.WriteString(ei.Condition.String())
+		out.WriteString(") ")
+		out.WriteString(ei.Consequence.String())
+	}
 
 	if ie.Alternative != nil {
 		out.WriteString("else ")

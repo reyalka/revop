@@ -334,14 +334,39 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	expr.Consequence = p.parseBlock()
 
-	if p.peekTokenIs(token.ELSE) {
+	for p.peekTokenIs(token.ELSE) {
 		p.nextToken()
+
+		if p.peekTokenIs(token.IF) {
+			p.nextToken()
+			elseIf := &ast.ElseIfBranch{Token: p.curToken}
+
+			if !p.expectPeek(token.LPAREN) {
+				return nil
+			}
+
+			p.nextToken()
+			elseIf.Condition = p.parseExpression(LOWEST)
+
+			if !p.expectPeek(token.RPAREN) {
+				return nil
+			}
+
+			if !p.expectPeek(token.LBRACE) {
+				return nil
+			}
+
+			elseIf.Consequence = p.parseBlock()
+			expr.ElseIfs = append(expr.ElseIfs, elseIf)
+			continue
+		}
 
 		if !p.expectPeek(token.LBRACE) {
 			return nil
 		}
 
 		expr.Alternative = p.parseBlock()
+		break
 	}
 	return expr
 }
