@@ -100,7 +100,6 @@ func TestIfElseExpression(t *testing.T) {
 	}{
 		{"if (true) { 10 }", 10},
 		{"if (false) { 10 }", nil},
-		{"if (1) { 10 }", nil},
 		{"if (1 < 2) { 10 }", 10},
 		{"if (1 > 2) { 10 }", nil},
 		{"if (1 > 2) { 10 } else { 20 }", 20},
@@ -146,6 +145,76 @@ func TestElseIfEvaluation(t *testing.T) {
 			testIntegerObject(t, evaluated, int64(integer))
 		} else {
 			testNullObject(t, evaluated)
+		}
+	}
+}
+
+func TestIfWithoutElseAsExpression(t *testing.T) {
+	// Statement context: missing else + false path stays NULL.
+	statementTests := []string{
+		"if (false) { 10 }",
+		"if (false) { 10 } else if (false) { 20 }",
+	}
+	for _, input := range statementTests {
+		evaluated := testEval(input)
+		testNullObject(t, evaluated)
+	}
+
+	// Expression context with branch taken: no error even without else.
+	successTests := []struct {
+		input    string
+		expected int64
+	}{
+		{"let x = if (true) { 10 }; x", 10},
+		{"let x = if (false) { 10 } else if (true) { 20 }; x", 20},
+	}
+	for _, tt := range successTests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+
+	// Expression context without else + false path: Error (issue #5).
+	errorTests := []string{
+		"let x = if (false) { 10 }; x",
+		"let x = if (false) { 10 } else if (false) { 20 }; x",
+		"let x = if (1 > 2) { 10 } else if (2 > 3) { 20 } else if (3 > 4) { 30 }; x",
+	}
+	for _, input := range errorTests {
+		evaluated := testEval(input)
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("no error object returned for %q. got=%T(%+v)", input, evaluated, evaluated)
+			continue
+		}
+		expectedMessage := "no else branch for if expression"
+		if errObj.Message != expectedMessage {
+			t.Errorf("wrong error message for %q. got=%q, want=%q", input, errObj.Message, expectedMessage)
+		}
+	}
+}
+
+func TestIfNonBooleanCondition(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{"if (1) { 10 }", "condition for `if` must return BOOLEAN, got INTEGER"},
+		{"if (1) { 10 } else { 20 }", "condition for `if` must return BOOLEAN, got INTEGER"},
+		{"let x = if (1) { 10 } else { 20 }; x", "condition for `if` must return BOOLEAN, got INTEGER"},
+		{"if (false) { 10 } else if (1) { 20 } else { 30 }", "condition for `if` must return BOOLEAN, got INTEGER"},
+		{"if (false) { 10 } else if (1) { 20 }", "condition for `if` must return BOOLEAN, got INTEGER"},
+		{`if ("a") { 10 }`, "condition for `if` must return BOOLEAN, got STRING"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("no error object returned for %q. got=%T(%+v)", tt.input, evaluated, evaluated)
+			continue
+		}
+		if errObj.Message != tt.expectedMessage {
+			t.Errorf("wrong error message for %q. got=%q, want=%q", tt.input, errObj.Message, tt.expectedMessage)
 		}
 	}
 }
