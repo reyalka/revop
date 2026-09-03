@@ -284,11 +284,28 @@ func evalIfExpression(ie *ast.IfExpression, env *object.Environment) object.Obje
 
 	if cond == TRUE {
 		return Eval(ie.Consequence, env)
-	} else if ie.Alternative != nil {
-		return Eval(ie.Alternative, env)
-	} else {
-		return NULL
 	}
+
+	for _, ei := range ie.ElseIfs {
+		cond := Eval(ei.Condition, env)
+		if isError(cond) {
+			return cond
+		}
+
+		if cond.Type() != object.BOOLEAN {
+			return NULL
+		}
+
+		if cond == TRUE {
+			return Eval(ei.Consequence, env)
+		}
+	}
+
+	if ie.Alternative != nil {
+		return Eval(ie.Alternative, env)
+	}
+
+	return NULL
 }
 
 func evalBlockStatement(block *ast.Block, env *object.Environment) object.Object {

@@ -707,6 +707,155 @@ func TestIfElseExpression(t *testing.T) {
 	}
 }
 
+func TestElseIfExpression(t *testing.T) {
+	input := `if (x < y) { x } else if (y < z) { y } else { z }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Body does not contain %d statements. got=%d\n",
+			1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0])
+	}
+
+	exp, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
+	}
+
+	if !testInfixExpression(t, exp.Condition, "x", "<", "y") {
+		return
+	}
+
+	if len(exp.Consequence.Statements) != 1 {
+		t.Fatalf("consequence is not 1 statements. got=%d\n",
+			len(exp.Consequence.Statements))
+	}
+
+	consequence, ok := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Statements[0] is not ast.ExpressionStatement. got=%T",
+			exp.Consequence.Statements[0])
+	}
+
+	if !testIdentifier(t, consequence.Expression, "x") {
+		return
+	}
+
+	if len(exp.ElseIfs) != 1 {
+		t.Fatalf("exp.ElseIfs does not contain 1 branch. got=%d", len(exp.ElseIfs))
+	}
+
+	elseIf := exp.ElseIfs[0]
+	if !testInfixExpression(t, elseIf.Condition, "y", "<", "z") {
+		return
+	}
+
+	if len(elseIf.Consequence.Statements) != 1 {
+		t.Fatalf("else-if consequence is not 1 statements. got=%d",
+			len(elseIf.Consequence.Statements))
+	}
+
+	elseIfConsequence, ok := elseIf.Consequence.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("else-if Statements[0] is not ast.ExpressionStatement. got=%T",
+			elseIf.Consequence.Statements[0])
+	}
+
+	if !testIdentifier(t, elseIfConsequence.Expression, "y") {
+		return
+	}
+
+	if exp.Alternative == nil {
+		t.Fatalf("exp.Alternative should not be nil")
+	}
+
+	if len(exp.Alternative.Statements) != 1 {
+		t.Fatalf("exp.Alternative.Statements does not contain 1 statements. got=%d\n",
+			len(exp.Alternative.Statements))
+	}
+
+	alternative, ok := exp.Alternative.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("Alternative Statements[0] is not ast.ExpressionStatement. got=%T",
+			exp.Alternative.Statements[0])
+	}
+
+	if !testIdentifier(t, alternative.Expression, "z") {
+		return
+	}
+}
+
+func TestElseIfWithoutElse(t *testing.T) {
+	input := `if (x < y) { x } else if (y < z) { y }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0])
+	}
+	exp, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
+	}
+
+	if len(exp.ElseIfs) != 1 {
+		t.Fatalf("exp.ElseIfs does not contain 1 branch. got=%d", len(exp.ElseIfs))
+	}
+
+	if exp.Alternative != nil {
+		t.Fatalf("exp.Alternative should be nil. got=%+v", exp.Alternative)
+	}
+}
+
+func TestMultipleElseIfExpression(t *testing.T) {
+	input := `if (a) { 1 } else if (b) { 2 } else if (c) { 3 } else { 4 }`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T",
+			program.Statements[0])
+	}
+	exp, ok := stmt.Expression.(*ast.IfExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.IfExpression. got=%T", stmt.Expression)
+	}
+
+	if len(exp.ElseIfs) != 2 {
+		t.Fatalf("exp.ElseIfs does not contain 2 branches. got=%d", len(exp.ElseIfs))
+	}
+
+	if !testIdentifier(t, exp.ElseIfs[0].Condition, "b") {
+		return
+	}
+	if !testIdentifier(t, exp.ElseIfs[1].Condition, "c") {
+		return
+	}
+
+	if len(exp.Alternative.Statements) != 1 {
+		t.Fatalf("exp.Alternative should contain 1 statement. got=%d",
+			len(exp.Alternative.Statements))
+	}
+}
+
 func TestFunctionLiteralParsing(t *testing.T) {
 	input := `fn(x, y) { x + y; }`
 
